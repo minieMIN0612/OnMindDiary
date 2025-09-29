@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>온마음 성장일기 · 학생용 MVP</title>
+  <style>
+    * { box-sizing: border-box; }
+    :root { --bg:#fafafc; --card:#fff; --ink:#111; --muted:#6b7280; --accent:#2563eb; --ring:rgba(37,99,235,.25); --line:#e5e7eb; --warn:#fffbeb; }
+    body{ margin:0; font-family: system-ui, -apple-system, "Noto Sans KR", Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink); }
+    header{ position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.85) 60%,transparent); backdrop-filter: blur(8px); }
+    .container{ max-width:1200px; margin:0 auto; padding:16px; }
+    .brand{ display:flex; align-items:center; gap:12px; }
+    .brand h1{ font-size:20px; margin:0; }
+
+    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); }
+    .section{ padding:16px; }
+    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+    .field{ display:grid; gap:6px; flex:1; min-width:120px; }
+    label{ font-size:12px; color:var(--muted); }
+    input, select, textarea, button{ font:inherit; }
+    input, select, textarea{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; }
+    input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--ring); }
+    button{ padding:10px 14px; border-radius:10px; border:1px solid #d1d5db; background:#fff; cursor:pointer; }
+    .btn{ background:var(--accent); color:#fff; border-color:var(--accent); }
+    .btn:disabled{ opacity:.6; cursor:not-allowed; }
+    .kicker{ color:var(--muted); font-size:12px; }
+    .hint{ font-size:11px; color:#64748b; }
+    .divider{ height:1px; background:var(--line); margin:12px 0; }
+    .pill{ display:inline-flex; align-items:center; gap:6px; padding:6px 10px; border-radius:999px; border:1px solid var(--line); background:#fff; }
+
+    /* 레이아웃 */
+    #mainView .grid{ display:grid; grid-template-columns: 320px 1fr; gap:16px; }
+    @media (max-width:960px){ #mainView .grid{ grid-template-columns: 1fr; } }
+
+    /* 달력 */
+    .cal{ display:grid; gap:8px; }
+    .cal-header{ display:flex; justify-content:space-between; align-items:center; }
+    .cal-ctrls{ display:flex; align-items:center; gap:8px; }
+    .cal-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
+    .dow{ text-align:center; font-size:12px; color:var(--muted); }
+    .day{ aspect-ratio: 1/1; border:1px solid var(--line); border-radius:10px; background:#fff; display:flex; flex-direction:column; align-items:flex-end; padding:6px; position:relative; cursor:pointer; }
+    .day .num{ font-size:12px; color:#475569; }
+    .day.special::after{ content:"★"; position:absolute; left:6px; top:6px; font-size:12px; color:#f59e0b; }
+    .day .tag{ position:absolute; left:6px; right:6px; bottom:6px; font-size:10px; line-height:1.2; text-align:left; color:#111; background:#fffbe6; border:1px solid #fcd34d; border-radius:6px; padding:2px 4px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .day.today{ outline:2px solid var(--accent); }
+    .day.inactive{ opacity:.4; }
+
+    .q{ margin:0; font-weight:600; }
+    .qa{ display:grid; gap:12px; }
+    .qa .block{ display:grid; gap:6px; }
+    .prevLabel{ font-size:12px; color:#475569; }
+    .prevAns{ background:#f8fafc; border-color:#e2e8f0; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="container">
+      <div class="brand">
+        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M12 2c4.97 0 9 4.03 9 9 0 6.5-7.5 11-9 11S3 17.5 3 11c0-4.97 4.03-9 9-9Z" fill="#fde68a"/><path d="M12 6.5c2.21 0 4 1.79 4 4 0 3-3.33 5.08-4 5.5-.67-.42-4-2.5-4-5.5 0-2.21 1.79-4 4-4Z" fill="#f59e0b"/></svg>
+        <h1>온마음 성장일기 · 학생용 MVP</h1>
+        <span class="kicker">특별한 하루 × SEL 5-Years Diary</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 1) 모바일 우선: 로그인 첫 화면 -->
+  <section id="authView" class="container" style="max-width:560px;">
+    <div class="card section">
+      <div class="kicker">계정</div>
+      <div class="row">
+        <div class="field"><label>아이디</label><input id="userid" placeholder="예: s1234"/></div>
+        <div class="field"><label>비밀번호</label><input id="password" type="password" placeholder="비밀번호"/></div>
+      </div>
+      <div style="display:flex; gap:8px; margin-top:8px;">
+        <button id="btnLogin" class="btn">로그인</button>
+        <button id="btnSignup">회원가입</button>
+      </div>
+      <p class="hint" id="authHint">원하는 아이디·비밀번호를 직접 정해 회원가입하세요. (데모 저장소) — 운영 시 Firebase Auth 연동</p>
+    </div>
+  </section>
+
+  <!-- 2) 로그인 후: 달력/입력 화면 -->
+  <section id="mainView" class="container" style="display:none;">
+    <div class="grid">
+      <!-- 좌: 내 정보 -->
+      <aside class="card section">
+        <div class="kicker">내 정보(표시/비교용)</div>
+        <div class="row">
+          <div class="field"><label>학교</label><input id="school" placeholder="예: 삼동초"/></div>
+          <div class="field" style="max-width:120px"><label>학년</label>
+            <select id="grade"><option value="">선택</option><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option></select>
+          </div>
+          <div class="field" style="max-width:120px"><label>반</label><input id="klass" placeholder="예: 1" inputmode="numeric"/></div>
+          <div class="field" style="max-width:120px"><label>번호</label><input id="num" placeholder="예: 7" inputmode="numeric"/></div>
+        </div>
+        <div class="divider"></div>
+        <div class="pill">전년도 비교: <b id="prevYearLabel" style="margin-left:6px;">—</b></div>
+        <div class="divider"></div>
+        <button id="btnLogout" class="btn" style="width:100%;">로그아웃</button>
+      </aside>
+
+      <!-- 중: 달력 + 질문 -->
+      <section class="card section">
+        <div class="cal" id="calendarArea">
+          <div class="cal-header">
+            <div class="cal-ctrls">
+              <button id="prevMonth">◀</button>
+              <select id="yearPicker"></select>
+              <select id="monthPicker"></select>
+              <button id="todayBtn">오늘</button>
+            </div>
+            <div class="cal-ctrls"><button id="nextMonth">▶</button></div>
+          </div>
+          <div class="cal-grid" id="dow">
+            <div class="dow">일</div><div class="dow">월</div><div class="dow">화</div><div class="dow">수</div><div class="dow">목</div><div class="dow">금</div><div class="dow">토</div>
+          </div>
+          <div class="cal-grid" id="calGrid"></div>
+        </div>
+        <div class="divider"></div>
+        <div id="dayMeta">
+          <div class="kicker">선택한 날짜</div>
+          <h3 id="dayTitle" style="margin:6px 0 0 0;">달력에서 날짜를 선택하세요</h3>
+          <div class="hint" id="dayKeyHint"></div>
+        </div>
+        <div class="divider"></div>
+        <div class="qa" id="qaArea"></div>
+        <div class="divider"></div>
+        <div class="row" style="justify-content:flex-end;">
+          <button class="btn" id="saveBtn" disabled>저장하기</button>
+        </div>
+      </section>
+    </div>
+  </section>
+
+  <script type="module">
+    // ===== 유틸 =====
+    const $=(id)=>document.getElementById(id);
+
+    // ===== 간단 로컬 계정(데모) =====
+    const USERS_KEY='omdiary:users';
+    function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
+    function fromB64(s){ const bin=atob(s); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return arr.buffer; }
+    async function deriveKey(password, salt, iterations=120000){ const enc=new TextEncoder(); const base=await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveBits']); const bits=await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations, hash:'SHA-256'}, base, 256); return new Uint8Array(bits); }
+    function loadUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'{}'); }catch{ return {}; } }
+    function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
+    function makeStudentId(){ return crypto.randomUUID? crypto.randomUUID(): Math.random().toString(36).slice(2); }
+    async function createAccount(uid, pw){ const users=loadUsers(); if(users[uid]) throw new Error('이미 존재하는 아이디입니다.'); const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(pw, salt.buffer); const studentId=makeStudentId(); users[uid]={ salt:b64(salt.buffer), key:b64(key.buffer), studentId, createdAt:Date.now() }; saveUsers(users); return {studentId}; }
+    async function verifyAccount(uid, pw){ const users=loadUsers(); const rec=users[uid]; if(!rec) return null; const derived=await deriveKey(pw, fromB64(rec.salt)); const stored=new Uint8Array(fromB64(rec.key)); if(derived.length!==stored.length) return null; let diff=0; for(let i=0;i<derived.length;i++) diff|=derived[i]^stored[i]; return diff===0? rec.studentId: null; }
+
+    // ===== 세션 / 화면 전환 =====
+    let session={ uid:null, studentId:null };
+    function setSession(uid, studentId){ session={uid, studentId}; localStorage.setItem('omdiary:session', JSON.stringify(session)); syncAuthUI(); }
+    function clearSession(){ session={uid:null, studentId:null}; localStorage.removeItem('omdiary:session'); syncAuthUI(); }
+    function loadSession(){ try{ const s=JSON.parse(localStorage.getItem('omdiary:session')||'null'); if(s&&s.uid&&s.studentId) session=s; }catch{} syncAuthUI(); }
+    function getStudentId(){ return session.studentId; }
+
+    const authView=$('authView'), mainView=$('mainView');
+    const uidEl=$('userid'), pwEl=$('password');
+    const btnLogin=$('btnLogin'), btnSignup=$('btnSignup');
+    const btnLogout=$('btnLogout');
+    function syncAuthUI(){ const logged=!!session.studentId; authView.style.display= logged? 'none':'block'; mainView.style.display= logged? 'block':'none'; updateSaveState(); }
+
+    btnSignup.addEventListener('click', async ()=>{ const uid=uidEl.value.trim(); const pw=pwEl.value; if(!uid||!pw) return alert('아이디/비밀번호를 입력하세요.'); const pw2=prompt('비밀번호를 한 번 더 입력하세요.'); if(pw2===null) return; if(pw2!==pw) return alert('비밀번호가 일치하지 않습니다.'); try{ const {studentId}=await createAccount(uid,pw); setSession(uid,studentId); alert('회원가입 성공!'); }catch(e){ alert(e.message||'회원가입 실패'); } });
+    btnLogin.addEventListener('click', async ()=>{ const uid=uidEl.value.trim(); const pw=pwEl.value; if(!uid||!pw) return alert('아이디/비밀번호를 입력하세요.'); const sid=await verifyAccount(uid,pw); if(!sid) return alert('아이디 또는 비밀번호가 틀립니다.'); setSession(uid,sid); alert('로그인 되었습니다.'); loadCompare(); });
+    btnLogout.addEventListener('click', ()=>{ clearSession(); alert('로그아웃 되었습니다.'); });
+
+    // ===== 질문 데이터(전량) =====
+    const QUESTIONS={
+      '03-02':{title:'3월 2일 · 개학',lunar:false,questions:{
+        low:["여러분은 '개학'하면 어떤 것이 떠오르나요?","개학 전날 우리는 어떤 마음을 느낄 수 있을까요?","우리는 개학날 느끼는 여러가지 마음을 누구와 말할 수 있을까요?"],
+        mid:["새로운 친구를 사귈 때 어떤 감정을 느끼나요?","개학을 앞두고 가장 걱정되는 것은 무엇인가요?","친구의 마음을 알아차리는 방법은 어떤 게 있을까요?"],
+        high:["처음 만난 친구에게 어떻게 인사하면 좋을까요?","먼저 다가가는 것이 어려울 때는 어떻게 하는 것이 좋을까요?","친구를 사귀기 위한 여러분의 방법은 무엇인가요?"]}},
+      '03-20':{title:'3월 20일 · 국제 행복의 날',lunar:false,questions:{
+        low:['여러분이 살면서 가장 행복했던 날은 언제인가요?','나는 어떤 순간에 행복하다고 느끼나요?','행복할 때 내 얼굴은 어떤 표정일까요?'],
+        mid:["나에게 '진짜 행복'이란 무엇인요?",'나는 최근에 언제 가장 행복했나요?','친구의 행복을 위해 내가 해줄 수 있는 건 무엇일까요?'],
+        high:['사람들마다 행복한 순간은 같을까요, 다를까요?','여러분이 누군가를 행복하게 해준 적이 있다면 언제, 누구에게 인가요?','행복을 혼자만 느끼는 것과 함께 나누는 것은 어떻게 다를까요?']}},
+      '04-01':{title:'4월 1일 · 멸종위기종의 날',lunar:false,questions:{
+        low:['멸종위기종에는 어떤 동물이 있을까요?','사라지고 있는 동물들이 내게 말을 건다면, 어떤 말을 할까요?','사라지고 있는 동물들을 위해 내가 할 수 있는 일에는 어떤 것이 있을까요?'],
+        mid:['사라져가는 동물들에게 미안했던 순간이 있었나요?','내가 아끼는 생명체는 무엇이며, 왜 소중할까요?','동물을 보호하기 위해 내가 할 수 있는 행동은 무엇일까요?'],
+        high:['많은 동물들이 멸종한다면 인간에게는 어떤 영향을 미칠까요?','친구가 자연을 해치는 행동을 한다면, 나는 어떻게 행동해야 할까요?','멸종위기 동물을 보호하기 위해 내가 실천할 수 있는 일은 무엇일까요?']}},
+      '04-20':{title:'4월 20일 · 장애인의 날',lunar:false,questions:{
+        low:['여러분은 몸을 다쳐서 불편을 겪은 일이 있나요?','나와 조금 다르게 행동하는 친구를 보면 어떤 생각이 드나요?','어떻게하면 그 친구와 잘 지낼 수 있을까요?'],
+        mid:['몸이 불편한 친구들은 어떤 하루를 보낼까요?','장애가 있는 친구가 수업이나 놀이에서 불편함을 느낀다면, 나는 어떤 도움을 줄 수 있을까요?','장애인과 비장애인이 함께 생활하기 위해 바꿀 수 있는 공간이나 규칙은 무엇이 있을까요?'],
+        high:['우리 나라는 장애인이 살기 좋은 곳이라고 생각하나요?','장애인에게 장애란 어떤 의미일까요?','장애를 틀림이 아닌 다름으로 존중하려면 어떻게 해야 할까요?']}},
+      '04-25':{title:'4월 25일 · 법의 날',lunar:false,questions:{
+        low:['여러분은 우리 반의 규칙을 잘 지키고 있나요?','만약 규칙이 없다면 어떤 일이 생길까요?','우리 반을 위해 꼭 필요한 규칙은 무엇이라고 생각하나요?'],
+        mid:['만약 규칙이 없다면 학교생활은 어떻게 달라질까요?','우리 반 친구들이 함께 지켜야 할 약속을 한 가지 정한다면 무엇이 좋을까요?','친구와의 다툼에서 규칙이 도움이 되었던 적이 있었나요?'],
+        high:['규칙이나 법이 없다면 어떤 일이 생길까요?','왜 사람들은 규칙이나 법을 정할까요?','만약 내가 규칙을 어긴 것을 아무도 모른다면, 그냥 넘어가도 될까요?']}},
+      '05-05':{title:'5월 5일 · 어린이날',lunar:false,questions:{
+        low:['어린이날은 언제인가요?','자랑스러운 어린이인 나의 장점을 말해볼까요?','나는 나의 어떤 점이 가장 마음에 드나요?'],
+        mid:['나는 어떤 점에서 특별하고 소중한 존재일까요?','어린이날 꼭 하고 싶은 일이 있나요?','내가 어른이 되면 어린이에게 무엇을 해주고 싶은가요?'],
+        high:['여러분에게 가장 중요한 어린 권리는 무엇이고, 왜 그렇게 생각하나요?','전쟁이나 가난 때문에 학교에 다니지 못하거나, 일해야 하는 어린이들의 마음은 어떨까요?','모든 어린이가 같은 권리를 누리려면, 어떤 도움이 필요할까요?']}},
+      '05-20':{title:'5월 20일 · 꿀벌의 날',lunar:false,questions:{
+        low:["여러분은 '꿀벌'하면 무엇이 떠오르나요?",'만약 꿀벌이 나에게 말을 걸면 뭐라고 할까요?','나는 꿀벌에게 어떤 말을 해줄 수 있을까요?'],
+        mid:['꿀벌이 없다면 세상이 어떻게 변할까요?','꿀벌이 사라지지 않도록 어떻게 도와야 할까요?','작지만 큰 도움을 주는 존재에는 또 무엇이 있을까요?'],
+        high:['만약 꿀벌이 모두 사라진다면 어떤 일이 생길까요?','친환경 농산물을 고르는 것이 왜 꿀벌을 보호하는 데 도움이 될까요?','오늘 여러분의 행동은 환경에 어떤 영향을 미칠까요?']}},
+      '06-18':{title:'6월 18일 · 국제 증오심 표현 반대의 날',lunar:false,questions:{
+        low:['여러분은 친구가 한 말 때문에 속상했던 적이 있나요?','여러분 어떤 말을 들으면 기분이 좋아지나요?','더 좋은 세상을 만들기 위해 다른 사람에게 해주면 좋을 것 같은 말에는 무엇이 있을까요?'],
+        mid:['내가 상처받았던 친구의 말 한마디는 무엇이었나요?','내가 상처받았던 친구의 행동은 무엇이었나요?','화가 나거나 서운할 때 어떻게 표현하면 좋을까요?'],
+        high:['친구의 말 중 나를 기분 좋게 한 말은 무엇인가요?','친구가 나에게 상처 주는 말을 했을 때, 어떻게 하면 싸우지 않고 내 마음을 전할 수 있을까요?','우리 반 모두가 존중받으려면 어떤 대화 약속이 필요할까요?']}},
+      '06-21':{title:'6월 21일 · 세계 요가의 날',lunar:false,questions:{
+        low:['여러분은 요가를 해본 적이 있나요?','내 몸이 가장 편안해질 때는 언제인가요?','내가 가장 좋아하는 쉬는 방법은 무엇인가요?'],
+        mid:['몸과 마음이 지친 날, 나는 어떻게 회복하나요?','마음의 숨을 쉰다는 건 어떤 의미일까요?','내가 평온해지는 시간과 공간은 언제, 어디일까요?'],
+        high:['여러분은 스트레스가 쌓일 때 어떻게 해소하나요?','짜증이 날 때 바로 화 내기 vs 마음 가라 앉히기 중 어떤 선택을 주로 하나요?','자신의 생활 습관 중 내 몸과 마음에 좋지 않은 습관은 무엇인가요?']}},
+      '07-30':{title:'7월 30일 · 국제 우정의 날',lunar:false,questions:{
+        low:["여러분은 '친구'하면 무엇이 떠오르나요?",'친구와 사이가 좋아질 때 나는 어떤 마음이 드나요?','친구에게 내가 먼저 해줄 수 있는 좋은 말에는 어떤 것이 있을까요?'],
+        mid:['친구와의 우정을 지키기 위해 노력한 적이 있었나요?','나의 단짝 친구를 떠올리면 어떤 마음이 드나요?','진짜 친구란 어떤 친구일까요?'],
+        high:['우정은 왜 소중할까요?','친구와 갈등이 있을 때, 여러분은 주로 먼저 다가가는 쪽인가요, 기다리는 쪽인가요?',"'친구는  OO이다' 라고 표현히고자 할 때 빈칸에 어울리는 말은 어떤 것이 있을까요?"]}},
+      'L-08-15':{title:'8월 15일(음력) · 추석',lunar:true,questions:{
+        low:["여러분은 '추석'하면 무엇이 떠오르나요?",'오랜만에 친척들을 만나면 어떤 마음이 드나요?','추석에 가족들과 마음을 나누며 함께 할 수 있는 것에는 어떤 것이 있을까요?'],
+        mid:['추석에 가족(친척)과 함께 보낸 소중한 순간은 언제였나요?','추석에 가족(친척)에게 감사한 마음을 어떻게 표현하면 좋을까요?','나를 아껴주시는 친척들께 전하고 싶은 진심 어린 말 한마디는?'],
+        high:['오랜만에 만난 친척에게 듣고 싶은 말은 무엇인가요?','가족들이 그냥 하는 말이 내게 상처가 될 때, 어떻게 하면 솔직하고 예의 있게 말할 수 있을까요?','혼자 조용히 있는 친척 동생이 있다면, 나라면 어떻게 할 것인요?']}},
+      '09-10':{title:'9월 10일 · 세계 자살예방의 날',lunar:false,questions:{
+        low:['여러분은 속상하거나 매우 슬펐던 적이 있나요?','속상하거나 슬펐을 때, 나에게 위로가 된 것은 무엇이었나요?','내가 속상하거나 외로울 때, 내 마음에게 어떤 말을 해주고 싶나요?'],
+        mid:['여러분의 슬픈 마음을 누구에게 털어놓을 수 있나요?','마음이 힘든 친구에게 건네고 싶은 위로의 말은 무엇인가요?','감정을 숨기고 계속해서 참는다면 마음이 어떨까요?'],
+        high:['여러분은 세상에서 혼자라는 생이 든 적이 있나요?','힘들었던 순간 누군가의 말이나 행동 덕분에 위로 받았던 경험이 있나요?','마음이 힘든 친구가 있다면 어떤 위로의 말을 해주면 좋을까요?']}},
+      '09-21':{title:'9월 21일 · 국제 평화의 날',lunar:false,questions:{
+        low:["여러분은 '평화' 하면 무엇이 떠오르나요?",'오늘 나의 말과 행동은 친구에게 평화로운 느낌을 주었을까요?','우리 반의 평화를 위해 나는 무엇을 할 수 있을까요?'],
+        mid:['친구와 멀어질까봐 불편한 마음을 털어놓지 못했던 경험이 있나요?','친구와의 갈등을 평화롭게 해결했던 적이 있었나요?','교실에서 평화를 지키기 위해 내가 할 수 있는 작은 일은 무엇이 있을까요?'],
+        high:['평화란 왜 중요할까요?','여러분은 최근에 친구와 다퉜을 때, 갈등을 어떻게 해결했나요?','내가 평화를 지키기 위해 할 수 있는 일은 무엇이 있을까요?']}},
+      '10-02':{title:'10월 2일 · 국제 비폭력의 날',lunar:false,questions:{
+        low:['화를 내고 나면 어떤 마음이 드나요?','화가 날 때 소리를 지르지 않고 마음을 표현해본 적이 있나요?','화가 날 때 어떻게 표현하면 내 마음의 평화에 도움이 될까요?'],
+        mid:['여러분은 화가 날 때 주로 어떻게 반응하나요?','화가 날 때 평소와 다른 신체적인 변화를 느껴본 적이 있나요? 있다면 어떤 변화였는지 말해볼까요?','친구와 갈등이 생겼을 때 폭력 없이 내 마음을 어떻게 표현하면 좋을까요?'],
+        high:['오늘 하루, 나는 누군가에게 상처 주는 말이나 행동을 한 적이 있을까요?','서로 다른 의견이 있을 때 싸우지 않고 이야기하는 방법에는 어떤 것이 있을까요?','폭력적인 말과 행동은 관계에 어떤 영향을 미칠까요?']}},
+      '10-10':{title:'10월 10일 · 정신건강의 날',lunar:false,questions:{
+        low:['오늘 여러분의 마음 날씨는 어떤가요?','마음 날씨가 흐린 날, 우리는 무엇을 할 수 있을까요?','내 마음에게 해주고 싶은 말이 있다면 무엇인가요?'],
+        mid:['오늘 나의 감정을 색깔로 표현한다면 어떤 색깔일까요?','마음이 힘들 때 나를 도와줄 사람은 누가 있을까요?','기분이 좋아지는 나만의 방법이 있나요?'],
+        high:['오늘 나의 감정을 색깔로 표현한다면 어떤 색깔인가요?','마음을 건강하게 유지하는 것은 왜 중요할까요?','마음을 건강하게 유지하기 위해서 여러분은 어떤 노력을 하고 있나요?']}},
+      '11-16':{title:'11월 16일 · 국제 관용의 날',lunar:false,questions:{
+        low:['내가 실수를 했을 때 친구가 너그럽게 용서해준 적이 있나요?','그 때 나는 어떤 생각이 들었나요?','나에게 실수를 한 친구에게 속상한 내 마음을 어떻게 표현하면 좋을까요?'],
+        mid:['친구의 실수로 불편했던 경험이 있나요? 그때 나는 어떻게 행동했었나요?','나도 모르게 실수를 저질러 다른 사람을 불편하게 했을 때 어떤 감정이 드나요?','용서가 필요한 까닭은 무엇일까요?'],
+        high:['관용은 왜 소중할까요?','성격이 완전히 다른 친구랑 모둠 활동을 하면 어떤 점이 어렵고, 또 어떤 점이 좋을까요?','다름을 인정해주는 말이나 행동에는 어떤 것이 있을까요?']}},
+      '11-19':{title:'11월 19일 · 아동학대 예방의 날',lunar:false,questions:{
+        low:["내 마음이 '이건 싫어요!' 하고 말하고 싶을 땐 언제인가요?",'그럴 때 나는 어떤 말을 할 수 있을까요?','내가 힘들 때 나를 도와줄 수 있는 어른은 누구인가요?'],
+        mid:['어른들의 관심이 필요한 친구를 보았을 때 여러분은 어떤 행동을 할 수 있을까요?','나를 힘들게 하는 말과 행동을 하는 어른들로부터 나를 보호하는 방법에는 어떤 것들이 있을까요?','어른들에게 도움을 요청하는 말, 어떻게 시작할까요?'],
+        high:['"괜찮아?"라고 묻는 한 마디 말로도 힘이 되어줄 수 있을까요?','학대를 목격했을 때, 어른에게 알리는 것은 참견일까요, 책임 있는 행동일까요?','위험에 처한 누군가를 도와주려면 어떤 마음이 필요할까?']}},
+      '12-05':{title:'12월 5일 · 국제 자원봉사의 날',lunar:false,questions:{
+        low:['여러분은 누군가를 도와준 적이 있나요?','그 때 그 사람은 어떤 얼굴을 했나요?','다음에는 누구를 도와주고 싶나요?'],
+        mid:['누군가에게 도움을 주었을 때 여러분은 어떤 감정을 느끼나요?','도움을 주는 것과 받는 것 중 어떤 것이 더 어렵다고 생각하나요?','가족 외에 여러분에게 도움을 주는 사람 중 감사 인사를 전하고 싶은 사람은 누구인가요?'],
+        high:['누군가를 도와줄 때 어떤 기분이 드나요?','여러분의 주변에는 어떤 도움이 필요한 사람들이 있을까요?','여러분이 다른 사람을 도울 수 있는 방법에는 어떤 것이 있을까요?']}},
+      '12-10':{title:'12월 10일 · 인권의 날',lunar:false,questions:{
+        low:['친구를 존중한다는 건 어떤 행동일까요?','여러분은 누군가에게 존중받을 때 어떤 느낌이 드나요?','나는 친구를 어떻게 존중하고 있을까요?'],
+        mid:['여러분의 이름은 어떤 뜻을 가지고 있나요?','누구나 존중받아야 하는 이유가 무엇이라고 생각하나요?','친구의 권리를 지켜주기 위해 내가 할 수 있는 일은 무엇인가요?'],
+        high:['친구가 나를 무시하거나 놀린다면 어떤 기분일까요?','누군가 불공평한 대우를 받을 때 나는 어떤 선택을 해야 할까요?','모두가 존중받는 반을 만들기 위해 내가 오늘부터 할 수 있는 일은 무엇이 있을까요?']}},
+      '12-21':{title:'12월 21일 · 세계 명상의 날',lunar:false,questions:{
+        low:['지금 내 마음은 어떤 색깔일까요?','조용히 눈을 감아 보세요. 내 마음에서 어떤 느낌이 올라오나요?',"내 마음이 '쉬고 싶다'고 말할 때, 나는 어떤 행동을 하면 좋을까요?"],
+        mid:['올해 가장 기억에 남는 감정은 무엇인가요?','지금 나 자신에게 해주고 싶은 말은 무엇인가요?','자신을 되돌아보는 시간이 왜 필요하다고 생각하나요?'],
+        high:['화가 났을 때 바로 말하거나 행동하면 어떤 일이 생길까?','오늘 있었던 일 중 내가 잘한 일은 무엇인가요?','가만히 나를 돌아보는 시간은 나에게 어떤 도움이 될까요?']}},
+      'L-01-01':{title:'1월 1일(음력) · 설날',lunar:true,questions:{
+        low:["여러분은 '설날'하면 무엇이 떠오르나요?",'오랜만에 가족과 친척들을 만나면 어떤 기분이 드나요?','가족들과 더 잘지내기 위해서 나는 어떤 노력을 할 수 있을까요?'],
+        mid:['우리 가족(친척) 중에서 나는 어떤 역할을 하고 있을까요?','설날 가족과 함께 했던 기억 중 가장 따뜻했던 순간은 언제인가요?','가족(친척)중에서 고마운 마음을 전하고 싶은 사람은 누구일까요? 그 이유는 무엇일까요?'],
+        high:['명절에 가족들 사이에 벌어질 수 있는 갈등에는 어떤 것들이 있을까요?','어른들이 궁금해하시는 질문에 대답하기 불편할 때, 예의를 지키며 내 기분도 지키려면 어떻게 말해야 할까요?','모두가 즐거운 설날을 보내기 위해 내가 할 수 있는 일은 무엇이 있을까요?']}},
+      '01-04':{title:'1월 4일 · 세계 점자의 날',lunar:false,questions:{
+        low:['여러분은 점자를 본 적이 있나요?','눈을 감고 무슨 물건인지 맞추려면 어떻게 해야 할까요?','여러분은 누군가의 마음을 손끝으로 만지듯 조심스럽게 느껴본 적이 있나요?'],
+        mid:['나의 감각 중 하나를 잃는다면 어떤 기분이 들까요?','점자를 사용하는 사람은 세상을 어떻게 느낄까요?','서로 다름에 대해 평소에 나는 어떤 태도를 가지고 있나요?'],
+        high:['어느 날 갑자기 눈이 보이지 않는다면 어떤 기분이 들까요?','시각장애인에게 점자는 어떤 의미일까요?','우리 학교에 시각장애인 친구가 있다면,어떤 점이 가장 불편할까요?']}},
+      '02-10':{title:'2월 10일 · 세계 콩의 날',lunar:false,questions:{
+        low:['여러분은 콩을 좋아하나요?','건강한 몸을 만드는 음식에는 콩 말고 무엇이 있을까요?',"건강한 마음을 만드는 '마음의 콩'에는 무엇이 있을까요?"],
+        mid:['씨앗 하나가 자라기 위해 필요한 것들은 무엇이 있을까요?','건강한 식생활을 위해 할 수 있는 일은 무엇일까요?','콩이 천천히 자라듯 나는 어떤 가능성을 품고 자라고 있을까요?'],
+        high:['여러분이 콩을 좋아하거나 싫어하는 이유는 무엇인가요?','콩을 키우는 것과 소를 키우는 것은 환경에 각각 어떤 영향을 미칠까요?','우리가 먹을 것을 결정할 때 고려해야 할 요소에는 어떤 것이 있을까요?']}},
+      '02-21':{title:'2월 21일 · 국제 모국어의 날',lunar:false,questions:{
+        low:['여러분은 어떤 말을 들을 때 기분이 좋은가요?','여러분은 어떤 말을 들을 때 마음이 편안해지나요?','그 말은 왜 나를 따뜻하게 만들까요?'],
+        mid:['내가 가장 마음이 편해지는 말은 무엇인가요?','다른 나라의 언어를 들을 때 어떤 느낌이 드나요?','한국어를 배우려는 외국인에게 어떤 응원을 해주면 좋을까요?'],
+        high:['모국어를 잃어버린 사람들은 어떤 마음일까요?','다양한 언어와 문화를 존중해야 하는 까닭은 무엇일까요?','우리말을 지키기 위해 내가 할 수 있는 일은 무엇일까요?']}},
+      '03-01':{title:'3월 1일 · 제로 차별의 날',lunar:false,questions:{
+        low:['나와 다르게 생기거나 다른 옷을 입은 친구를 보면 어떤 생각이 드나요?',"'다르다'와 '틀리다'는 어떤 차이가 있을까요?",'나와는 다른 친구에게 우리는 어떤 말을 해줄 수 있을까요?'],
+        mid:['차이와 차별은 어떻게 다르다고 생각하나요?','나는 평소에 피부색이나 생김새가 다른 사람에 대해 어떤 태도를 가지고 있요?','나와 다른 친구에게서 배울 점은 무엇인가요?'],
+        high:['여러분은 누군가를 차별해보거나, 차별 받아본 적 있나요?','피부색이 달라서, 남자/여자라는 이유로 차별받는다면 어떤 기분일까요?','서로의 다름을 이해하고 존중하는 것은 왜 중요할까요?']}}
+    };
+
+    // ===== 음력→양력 매핑 =====
+    const lunarFmt=(()=>{ try{ return new Intl.DateTimeFormat('en-u-ca-chinese',{month:'numeric',day:'numeric'}); }catch{ return null; } })();
+    function lunarToSolarKey(year,mm,dd){ if(!lunarFmt) return null; const start=new Date(year,0,1), end=new Date(year,11,31); for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){ const parts=lunarFmt.formatToParts(d); const m=Number(parts.find(p=>p.type==='month').value); const dn=Number(parts.find(p=>p.type==='day').value); if(m===mm && dn===dd){ return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; } } return null; }
+    function buildLunarMap(year){ const map={}; Object.keys(QUESTIONS).filter(k=>k.startsWith('L-')).forEach(k=>{ const [_,mmm,ddd]=k.split('-'); const solar=lunarToSolarKey(year, Number(mmm), Number(ddd)); if(solar) map[solar]=k; }); return map; }
+
+    // ===== 저장 유틸(로컬) =====
+    function makeDocId({studentId,year,dayKey}){ return `${studentId}__${year}__${dayKey}`; }
+    function saveLocal(id,data){ localStorage.setItem(`omdiary:${id}`, JSON.stringify(data)); }
+    function loadLocal(id){ const raw=localStorage.getItem(`omdiary:${id}`); return raw? JSON.parse(raw): null; }
+    async function saveAnswers(payload){ const id=makeDocId(payload); saveLocal(id,{...payload,savedAt:Date.now()}); return id; }
+    async function loadAnswers(key){ return loadLocal(makeDocId(key)); }
+
+    // ===== DOM refs =====
+    const school=$('school'), grade=$('grade'), klass=$('klass'), num=$('num');
+    const calGrid=$('calGrid');
+    const prevBtn=$('prevMonth'), nextBtn=$('nextMonth');
+    const yearPicker=$('yearPicker'), monthPicker=$('monthPicker'), todayBtn=$('todayBtn');
+    const dayTitle=$('dayTitle'), dayKeyHint=$('dayKeyHint');
+    const qaArea=$('qaArea'), saveBtn=$('saveBtn');
+    const prevYearLabel=$('prevYearLabel');
+
+    function ensureStudentInputs(){ const logged=!!getStudentId(); return logged && school.value.trim() && grade.value && klass.value.trim() && num.value.trim(); }
+
+    const today=new Date(); let viewYear=today.getFullYear(); let viewMonth=today.getMonth(); let currentLunarMap={};
+
+    function initPickers(){ yearPicker.innerHTML=''; monthPicker.innerHTML=''; for(let y=today.getFullYear()-2;y<=today.getFullYear()+2;y++){ const o=document.createElement('option'); o.value=y; o.textContent=`${y}년`; if(y===viewYear) o.selected=true; yearPicker.appendChild(o);} for(let m=1;m<=12;m++){ const o=document.createElement('option'); o.value=m-1; o.textContent=`${m}월`; if(m-1===viewMonth) o.selected=true; monthPicker.appendChild(o);} }
+
+    function sameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
+
+    let currentSolarKey=null; let currentQuestionKey=null;
+
+    function renderCalendar(){
+      calGrid.innerHTML=''; initPickers(); currentLunarMap=buildLunarMap(viewYear);
+      const first=new Date(viewYear,viewMonth,1); const startIdx=(first.getDay()+7)%7; const daysInMonth=new Date(viewYear, viewMonth+1,0).getDate();
+      const prevDays=startIdx; const total=prevDays+daysInMonth; const rows=Math.ceil(total/7)*7;
+      for(let i=0;i<rows;i++){
+        const cell=document.createElement('button'); cell.className='day';
+        const dayNum=i-startIdx+1; let inactive=true, dateObj=null; let numLabel='';
+        if(dayNum>=1 && dayNum<=daysInMonth){ inactive=false; numLabel=dayNum; dateObj=new Date(viewYear,viewMonth,dayNum); }
+        const isToday=dateObj&&sameDate(dateObj,today);
+        const solarKey=dateObj? `${String(viewMonth+1).padStart(2,'0')}-${String(dayNum).padStart(2,'0')}`: null;
+        const qKey= solarKey? (QUESTIONS[solarKey]? solarKey: (currentLunarMap[solarKey]||null)) : null;
+        if(inactive) cell.classList.add('inactive'); if(isToday) cell.classList.add('today'); if(qKey) cell.classList.add('special');
+        let label=null, titleAttr=null; if(qKey){ const t=QUESTIONS[qKey]?.title||''; const name=t.includes('·')? t.split('·')[1].trim(): t.trim(); label=name; titleAttr=qKey.startsWith('L-')? `${t} (양력 ${solarKey})`: t; }
+        cell.innerHTML=`<div class="num">${numLabel||''}</div>${label?`<div class=\"tag\">${label}</div>`:''}`;
+        if(titleAttr) cell.title=titleAttr;
+        if(dateObj){ cell.addEventListener('click', ()=> selectDate(solarKey,dateObj)); }
+        calGrid.appendChild(cell);
+      }
+    }
+
+    function bandFromGrade(g){ g=Number(g); if(g<=2) return 'low'; if(g<=4) return 'mid'; return 'high'; }
+
+    async function renderQuestions(){
+      const band=bandFromGrade(grade.value||1);
+      const qs=QUESTIONS[currentQuestionKey].questions[band];
+      const studentId=getStudentId(); const prevYear=today.getFullYear()-1; prevYearLabel.textContent=`${prevYear}년`;
+      const prev= await loadAnswers({studentId, year:prevYear, dayKey:currentQuestionKey});
+      qaArea.innerHTML='';
+      qs.forEach((q,idx)=>{
+        const prevText=prev?.answers?.[idx]||'';
+        const blk=document.createElement('div'); blk.className='block';
+        blk.innerHTML=`<p class="q">Q${idx+1}. ${q}</p>`+
+          (prevText? `<div class="prevLabel">작년 답변</div><textarea class="prevAns" rows="3" readonly>${prevText}</textarea>`: '')+
+          `<textarea rows="4" data-idx="${idx}" placeholder="여기에 내 답을 적어요"></textarea>`;
+        qaArea.appendChild(blk);
+      });
+    }
+
+    function selectDate(solarKey,dateObj){
+      currentSolarKey=solarKey;
+      const qKey= QUESTIONS[solarKey]? solarKey: (currentLunarMap[solarKey]||null);
+      currentQuestionKey=qKey;
+      if(qKey){
+        const meta=QUESTIONS[qKey];
+        dayTitle.textContent= meta.title + (qKey.startsWith('L-')? ` (양력 ${solarKey})`:'');
+        dayKeyHint.textContent= qKey.startsWith('L-')? `음력 ${qKey.slice(2)} → 양력 ${solarKey}`: `양력 ${solarKey} · 학년군별 3문항`;
+        renderQuestions();
+      }else{
+        dayTitle.textContent=`${viewYear}년 ${viewMonth+1}월 ${dateObj.getDate()}일 · 등록된 특별일 없음`;
+        dayKeyHint.textContent='선택한 날짜에는 등록된 질문이 없어요';
+        qaArea.innerHTML='';
+      }
+      updateSaveState();
+    }
+
+    function updateSaveState(){ saveBtn.disabled = !(ensureStudentInputs() && currentQuestionKey); }
+    ;['input','change'].forEach(evt=> [school,grade,klass,num].forEach(el=> el.addEventListener(evt,()=>{ updateSaveState(); if(currentQuestionKey) renderQuestions(); })) );
+
+    async function loadCompare(){ if(!getStudentId()||!currentQuestionKey) return; await renderQuestions(); }
+
+    saveBtn.addEventListener('click', async ()=>{
+      const studentId=getStudentId(); if(!studentId) return alert('로그인 후 이용해 주세요.');
+      if(!ensureStudentInputs()||!currentQuestionKey) return alert('내 정보를 입력하고 달력에서 특별일을 선택하세요.');
+      const answers=Array.from(qaArea.querySelectorAll('textarea[data-idx]')).map(t=>t.value.trim());
+      const payload={ studentId, year: today.getFullYear(), dayKey: currentQuestionKey, answers, meta:{ school:school.value.trim(), grade:Number(grade.value), klass:klass.value.trim(), num:num.value.trim() } };
+      try{ await saveAnswers(payload); saveBtn.textContent='저장됨 ✔'; setTimeout(()=> saveBtn.textContent='저장하기',1200); await renderQuestions(); }
+      catch(e){ console.error(e); alert('저장 중 오류가 발생했어요.'); }
+    });
+
+    function syncFromPickers(){ viewYear=Number(yearPicker.value); viewMonth=Number(monthPicker.value); renderCalendar(); }
+    prevBtn.addEventListener('click', ()=>{ viewMonth--; if(viewMonth<0){ viewMonth=11; viewYear--; } renderCalendar(); autoSelectTodayIfSpecial(); });
+    nextBtn.addEventListener('click', ()=>{ viewMonth++; if(viewMonth>11){ viewMonth=0; viewYear++; } renderCalendar(); autoSelectTodayIfSpecial(); });
+    yearPicker.addEventListener('change', ()=>{ syncFromPickers(); autoSelectTodayIfSpecial(); });
+    monthPicker.addEventListener('change', ()=>{ syncFromPickers(); autoSelectTodayIfSpecial(); });
+    todayBtn.addEventListener('click', ()=>{ viewYear=today.getFullYear(); viewMonth=today.getMonth(); renderCalendar(); autoSelectTodayIfSpecial(); });
+
+    function autoSelectTodayIfSpecial(){ if(viewYear===today.getFullYear()&&viewMonth===today.getMonth()){ const key=`${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`; const isSpecial= Object.prototype.hasOwnProperty.call(QUESTIONS,key) || (currentLunarMap&&currentLunarMap[key]); if(isSpecial) selectDate(key,today); } }
+
+    // 초기
+    loadSession(); renderCalendar(); autoSelectTodayIfSpecial(); updateSaveState();
+
+    // 스모크 테스트
+    (function(){ const tests=[]; const ok=(n,c)=>tests.push({name:n,pass:!!c}); ok('QUESTIONS keys', Object.keys(QUESTIONS).length>=20); ok('달력 셀', document.getElementById('calGrid').children.length>0); console.table(tests); })();
+  </script>
+</body>
+</html>
