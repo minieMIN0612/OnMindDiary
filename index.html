@@ -140,16 +140,31 @@
     // ===== 유틸 =====
     const $=(id)=>document.getElementById(id);
 
-    // ===== 간단 로컬 계정(데모) =====
-    const USERS_KEY='omdiary:users';
-    function b64(buf){ return btoa(String.fromCharCode(...new Uint8Array(buf))); }
-    function fromB64(s){ const bin=atob(s); const arr=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) arr[i]=bin.charCodeAt(i); return arr.buffer; }
-    async function deriveKey(password, salt, iterations=120000){ const enc=new TextEncoder(); const base=await crypto.subtle.importKey('raw', enc.encode(password), {name:'PBKDF2'}, false, ['deriveBits']); const bits=await crypto.subtle.deriveBits({name:'PBKDF2', salt, iterations, hash:'SHA-256'}, base, 256); return new Uint8Array(bits); }
-    function loadUsers(){ try{ return JSON.parse(localStorage.getItem(USERS_KEY)||'{}'); }catch{ return {}; } }
-    function saveUsers(u){ localStorage.setItem(USERS_KEY, JSON.stringify(u)); }
-    function makeStudentId(){ return crypto.randomUUID? crypto.randomUUID(): Math.random().toString(36).slice(2); }
-    async function createAccount(uid, pw){ const users=loadUsers(); if(users[uid]) throw new Error('이미 존재하는 아이디입니다.'); const salt=crypto.getRandomValues(new Uint8Array(16)); const key=await deriveKey(pw, salt.buffer); const studentId=makeStudentId(); users[uid]={ salt:b64(salt.buffer), key:b64(key.buffer), studentId, createdAt:Date.now() }; saveUsers(users); return {studentId}; }
-    async function verifyAccount(uid, pw){ const users=loadUsers(); const rec=users[uid]; if(!rec) return null; const derived=await deriveKey(pw, fromB64(rec.salt)); const stored=new Uint8Array(fromB64(rec.key)); if(derived.length!==stored.length) return null; let diff=0; for(let i=0;i<derived.length;i++) diff|=derived[i]^stored[i]; return diff===0? rec.studentId: null; }
+  // ===== Firebase 기반 계정 관리 =====
+
+// 회원가입
+async function createAccount(uid, pw) {
+  try {
+    const userCredential = await auth.createUserWithEmailAndPassword(uid, pw);
+    console.log("회원가입 성공:", userCredential.user);
+    return userCredential.user.uid;
+  } catch (error) {
+    alert("회원가입 실패: " + error.message);
+    return null;
+  }
+}
+
+// 로그인
+async function verifyAccount(uid, pw) {
+  try {
+    const userCredential = await auth.signInWithEmailAndPassword(uid, pw);
+    console.log("로그인 성공:", userCredential.user);
+    return userCredential.user.uid;
+  } catch (error) {
+    alert("로그인 실패: " + error.message);
+    return null;
+  }
+}
 
     // ===== 세션 / 화면 전환 =====
     let session={ uid:null, studentId:null };
@@ -405,4 +420,5 @@
 </script>
 </body>
 </html>
+
 
