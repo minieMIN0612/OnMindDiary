@@ -140,12 +140,16 @@
     // ===== 유틸 =====
     const $=(id)=>document.getElementById(id);
 
-  // ===== Firebase 기반 계정 관리 =====
+// ===== Firebase 기반 계정 관리 =====
+
+// uid를 가짜 이메일로 변환
+const emailFromUserId = (userid) => `${userid}@id.onmaum`;
 
 // 회원가입
 async function createAccount(uid, pw) {
   try {
-    const userCredential = await auth.createUserWithEmailAndPassword(uid, pw);
+    const email = emailFromUserId(uid);
+    const userCredential = await auth.createUserWithEmailAndPassword(email, pw);
     console.log("회원가입 성공:", userCredential.user);
     return userCredential.user.uid;
   } catch (error) {
@@ -157,13 +161,15 @@ async function createAccount(uid, pw) {
 // 로그인
 async function verifyAccount(uid, pw) {
   try {
-    const userCredential = await auth.signInWithEmailAndPassword(uid, pw);
+    const email = emailFromUserId(uid);
+    const userCredential = await auth.signInWithEmailAndPassword(email, pw);
     console.log("로그인 성공:", userCredential.user);
     return userCredential.user.uid;
   } catch (error) {
     alert("로그인 실패: " + error.message);
     return null;
   }
+}
 }
 
     // ===== 세션 / 화면 전환 =====
@@ -420,5 +426,6 @@ async function verifyAccount(uid, pw) {
 </script>
 </body>
 </html>
+
 
 
