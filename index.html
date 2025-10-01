@@ -185,9 +185,38 @@ async function verifyAccount(uid, pw) {
     const btnLogout=$('btnLogout');
     function syncAuthUI(){ const logged=!!session.studentId; authView.style.display= logged? 'none':'block'; mainView.style.display= logged? 'block':'none'; updateSaveState(); }
 
-    btnSignup.addEventListener('click', async ()=>{ const uid=uidEl.value.trim(); const pw=pwEl.value; if(!uid||!pw) return alert('아이디/비밀번호를 입력하세요.'); const pw2=prompt('비밀번호를 한 번 더 입력하세요.'); if(pw2===null) return; if(pw2!==pw) return alert('비밀번호가 일치하지 않습니다.'); try{ const {studentId}=await createAccount(uid,pw); setSession(uid,studentId); alert('회원가입 성공!'); }catch(e){ alert(e.message||'회원가입 실패'); } });
-    btnLogin.addEventListener('click', async ()=>{ const uid=uidEl.value.trim(); const pw=pwEl.value; if(!uid||!pw) return alert('아이디/비밀번호를 입력하세요.'); const sid=await verifyAccount(uid,pw); if(!sid) return alert('아이디 또는 비밀번호가 틀립니다.'); setSession(uid,sid); alert('로그인 되었습니다.'); loadCompare(); });
-    btnLogout.addEventListener('click', ()=>{ clearSession(); alert('로그아웃 되었습니다.'); });
+  btnSignup.addEventListener('click', async () => {
+  const uid = uidEl.value.trim();
+  const pw = pwEl.value;
+  if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
+  try {
+    const sid = await createAccount(uid, pw);
+    if(!sid) return alert('회원가입 실패');
+    setSession(sid, uid);
+    alert('회원가입 성공!');
+  } catch(e){
+    alert('회원가입 오류: ' + e.message);
+  }
+});
+
+btnLogin.addEventListener('click', async () => {
+  const uid = uidEl.value.trim();
+  const pw = pwEl.value;
+  if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
+  try {
+    const sid = await verifyAccount(uid, pw);
+    if(!sid) return alert('로그인 실패');
+    setSession(sid, uid);
+    alert('로그인 성공!');
+  } catch(e){
+    alert('로그인 오류: ' + e.message);
+  }
+});
+
+btnLogout.addEventListener('click', () => {
+  clearSession();
+  alert('로그아웃 되었습니다.');
+});
 
     // ===== 질문 데이터(전량) =====
     const QUESTIONS={
@@ -426,6 +455,7 @@ async function verifyAccount(uid, pw) {
 </script>
 </body>
 </html>
+
 
 
 
