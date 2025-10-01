@@ -139,6 +139,16 @@
   <script type="module">
     // ===== 유틸 =====
     const $=(id)=>document.getElementById(id);
+      firebase.initializeApp(firebaseConfig);
+
+  console.log('firebase loaded?', !!window.firebase);
+  console.log('apps:', firebase.apps.length);
+  try {
+    console.log('projectId:', firebase.app().options.projectId);
+  } catch (e) {
+    console.error('firebase not initialized', e);
+  }
+    
 const auth = firebase.auth();
 const db   = firebase.firestore();
 
@@ -452,20 +462,9 @@ btnLogout.addEventListener('click', () => {
     measurementId: "G-6VVS4MSJBT"
   };
     
-<script>
-  firebase.initializeApp(firebaseConfig);
-
-  console.log('firebase loaded?', !!window.firebase);
-  console.log('apps:', firebase.apps.length);
-  try {
-    console.log('projectId:', firebase.app().options.projectId);
-  } catch (e) {
-    console.error('firebase not initialized', e);
-  }
-
-</script>
 </body>
 </html>
+
 
 
 
