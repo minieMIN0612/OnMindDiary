@@ -183,7 +183,6 @@ async function verifyAccount(uid, pw) {
     return null;
   }
 }
-}
 
     // ===== 세션 / 화면 전환 =====
     let session={ uid:null, studentId:null };
@@ -450,7 +449,6 @@ btnLogout.addEventListener('click', () => {
     // 스모크 테스트
     (function(){ const tests=[]; const ok=(n,c)=>tests.push({name:n,pass:!!c}); ok('QUESTIONS keys', Object.keys(QUESTIONS).length>=20); ok('달력 셀', document.getElementById('calGrid').children.length>0); console.table(tests); })();
   </script>
-  <script>
   const firebaseConfig = {
     apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
     authDomain: "haru-dc490.firebaseapp.com",
@@ -464,6 +462,7 @@ btnLogout.addEventListener('click', () => {
     
 </body>
 </html>
+
 
 
 
