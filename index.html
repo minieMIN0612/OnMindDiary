@@ -139,6 +139,8 @@
   <script type="module">
     // ===== 유틸 =====
     const $=(id)=>document.getElementById(id);
+    
+  // ===== Firebase 설정 =====
     const firebaseConfig = {
     apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
     authDomain: "haru-dc490.firebaseapp.com",
@@ -149,19 +151,6 @@
     appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
     measurementId: "G-6VVS4MSJBT"
   };
-      firebase.initializeApp(firebaseConfig);
-
-  console.log('firebase loaded?', !!window.firebase);
-  console.log('apps:', firebase.apps.length);
-  try {
-    console.log('projectId:', firebase.app().options.projectId);
-  } catch (e) {
-    console.error('firebase not initialized', e);
-  }
-    
-const auth = firebase.auth();
-const db   = firebase.firestore();
-
 
 // ===== Firebase 기반 계정 관리 =====
 
@@ -461,6 +450,7 @@ btnLogout.addEventListener('click', () => {
   </script>    
 </body>
 </html>
+
 
 
 
