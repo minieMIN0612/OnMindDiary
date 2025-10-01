@@ -450,11 +450,21 @@ btnLogout.addEventListener('click', () => {
   };
 
   firebase.initializeApp(firebaseConfig);
+    <script>
+  console.log('firebase loaded?', !!window.firebase);
+  console.log('apps:', firebase.apps?.length);
+  try {
+    console.log('projectId:', firebase.app().options.projectId);
+  } catch (e) {
+    console.error('firebase not initialized', e);
+  }
+</script>
   const auth = firebase.auth();
   const db = firebase.firestore();
 </script>
 </body>
 </html>
+
 
 
 
