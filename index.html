@@ -142,6 +142,10 @@
     
   // ===== Firebase 설정 =====
     const firebaseConfig = {
+      // --- Firebase init (config 선언 바로 아래에 위치해야 함) ---
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db   = firebase.firestore();
     apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
     authDomain: "haru-dc490.firebaseapp.com",
     databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
@@ -450,6 +454,7 @@ btnLogout.addEventListener('click', () => {
   </script>    
 </body>
 </html>
+
 
 
 
