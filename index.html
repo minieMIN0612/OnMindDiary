@@ -191,12 +191,16 @@ let diaryInited = false;
 
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
- onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, (user) => {
   if (user) {
-    if (diaryInited) return; // ✅ 이미 렌더된 경우 재실행 방지!
-    loginView.style.display = "none";
-    mainView.style.display  = "block";
-    initDiaryOnce(); // 로그인 유지 시 달력 다시 렌더링
+    // 🔹 약간의 지연으로 중복 실행 완벽 방지
+    setTimeout(() => {
+      if (diaryInited) return; // ✅ 이미 렌더된 경우 재실행 방지
+      diaryInited = true;      // ✅ 여기서 바로 true 처리
+      loginView.style.display = "none";
+      mainView.style.display  = "block";
+      initDiaryOnce();         // 로그인 유지 시 달력 다시 렌더링
+    }, 300); // 0.3초 지연
   } else {
     mainView.style.display  = "none";
     loginView.style.display = "block";
@@ -736,6 +740,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
