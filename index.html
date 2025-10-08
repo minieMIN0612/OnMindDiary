@@ -52,9 +52,23 @@
     .prevLabel{ font-size:12px; color:#475569; }
     .prevAns{ background:#f8fafc; border-color:#e2e8f0; }
   </style>
-  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
+    authDomain: "haru-dc490.firebaseapp.com",
+    databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "haru-dc490",
+    storageBucket: "haru-dc490.appspot.com",
+    messagingSenderId: "1062975092523",
+    appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
+    measurementId: "G-6VVS4MSJBT"
+  };
+  firebase.initializeApp(firebaseConfig);
+</script>
 </head>
 <body>
   <header>
@@ -454,6 +468,7 @@ btnLogout.addEventListener('click', () => {
   </script>    
 </body>
 </html>
+
 
 
 
