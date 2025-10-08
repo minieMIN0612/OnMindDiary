@@ -173,16 +173,20 @@ let diaryInited = false;
       }
     });
 
-    loginBtn.addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value.trim();
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
-      const email = `${id}@id.onmaum`;
-      try {
-      } catch (e) {
-        alert("로그인 실패: " + e.message);
-      }
-    });
+loginBtn.addEventListener("click", async () => {
+  const id = document.getElementById("userid").value.trim();
+  const pw = document.getElementById("password").value.trim();
+  if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
+  const email = `${id}@id.onmaum`;
+  try {
+    await signInWithEmailAndPassword(auth, email, pw);
+    // 🔹 여기서는 화면 전환하지 않아요.
+    // 로그인 성공 시 onAuthStateChanged가 자동으로 실행됩니다.
+  } catch (e) {
+    alert("로그인 실패: " + e.message);
+  }
+});
+
 
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
@@ -735,6 +739,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
