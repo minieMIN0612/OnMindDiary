@@ -1,589 +1,200 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>온마음 성장일기 · 학생용 MVP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>🌿 온마음 성장일기 · 학생용 MVP</title>
+<style>
+body{font-family:"Noto Sans KR",sans-serif;background:#f5f6fa;margin:0}
+.card{background:white;padding:20px;border-radius:16px;box-shadow:0 4px 10px rgba(0,0,0,.1);width:400px;max-width:90%;margin:0 auto;text-align:center}
+h1{font-size:22px;margin:10px 0}
+input,button,textarea,select{width:100%;padding:10px;margin:6px 0;border-radius:8px;border:1px solid #ccc;font-size:15px}
+button{cursor:pointer;background:#2563eb;color:white;font-weight:600;border:none}
+button:hover{background:#1d4ed8}
+.ghost{background:#e5e7eb;color:black}
+.small{font-size:13px;color:gray}
+.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:12px}
+.day{background:#fff;border:1px solid #ddd;border-radius:8px;aspect-ratio:1/1;position:relative;cursor:pointer}
+.day .num{position:absolute;top:4px;right:6px;font-size:12px;color:#555}
+.day .tag{position:absolute;left:4px;bottom:4px;font-size:10px;background:#fff8d1;border-radius:4px;padding:2px 3px;color:#222;border:1px solid #fde68a;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.star{position:absolute;top:4px;left:4px;color:#f59e0b;font-size:12px}
+.today{outline:2px solid #2563eb}
+.grid{display:grid;grid-template-columns:340px 1fr;gap:12px;max-width:900px;margin:20px auto}
+textarea{resize:none;height:90px}
+.prev{font-size:12px;color:#555;background:#f9fafb;border:1px solid #e5e7eb}
+.divider{height:1px;background:#e5e7eb;margin:10px 0}
+</style>
 
-  <style>
-    :root{
-      --bg:#f5f6fa; --card:#fff; --ink:#111; --muted:#64748b; --line:#e5e7eb;
-      --accent:#2563eb; --accent-2:#1d4ed8; --tag:#fffbe6; --tagline:#fcd34d;
-    }
-    *{box-sizing:border-box}
-    body {
-      font-family: system-ui, "Noto Sans KR", sans-serif;
-      background: var(--bg);
-      margin: 0;
-      color: var(--ink);
-    }
-    .wrap{ max-width: 1100px; margin: 0 auto; padding: 16px; }
-    .card {
-      background: var(--card);
-      padding: 16px;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.08);
-      border:1px solid var(--line);
-    }
-    h1{ font-size:22px; margin: 6px 0 2px; }
-    .small { font-size: 13px; color: var(--muted); }
-    input, select, button, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 10px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-      background:#fff;
-    }
-    textarea { resize: none; height: 90px; }
-    button {
-      cursor: pointer;
-      background-color: var(--accent);
-      color: white;
-      border: none;
-      font-weight: 600;
-    }
-    button:hover { background-color: var(--accent-2); }
-    .ghost{ background:#eef2ff; color:#111; border:1px solid var(--line); }
-    .row { display:flex; gap:10px; flex-wrap:wrap; }
-    .col { flex:1 1 260px; min-width:260px; }
-    .grid { display:grid; grid-template-columns: 320px 1fr; gap:16px; }
-    @media (max-width: 900px){ .grid{ grid-template-columns: 1fr; } }
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    /* 캘린더 */
-    .cal { display:grid; gap:8px; }
-    .cal-controls{ display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-    .cal-grid{ display:grid; grid-template-columns: repeat(7, 1fr); gap:6px; }
-    .dow{ text-align:center; font-size:12px; color:var(--muted); }
-    .day{
-      background:#fff; border:1px solid var(--line); border-radius:10px;
-      aspect-ratio:1/1; position:relative; padding:6px; display:flex; align-items:flex-end; justify-content:flex-end;
-      cursor:pointer;
-    }
-    .day:hover{ outline:2px solid rgba(37,99,235,.25); }
-    .day.inactive{ opacity:.4; cursor:default; }
-    .day .num{ font-size:12px; color:#475569; position:absolute; top:6px; right:6px; }
-    .day.today{ outline:2px solid var(--accent); }
-    .day .tag{
-      position:absolute; left:6px; right:6px; bottom:6px;
-      font-size:10px; line-height:1.2; text-align:left; color:#111;
-      background:var(--tag); border:1px solid var(--tagline); border-radius:6px; padding:2px 4px;
-      white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
-    }
-    .star { position:absolute; top:6px; left:6px; color:#f59e0b; font-size:12px; }
+// 🔹 Firebase 설정
+const firebaseConfig={
+ apiKey:"AIzaSyCUvpi0A00lc9t4Aamo6jCL5ZeKSppPmVM",
+ authDomain:"haru-dc490.firebaseapp.com",
+ databaseURL:"https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
+ projectId:"haru-dc490",
+ storageBucket:"haru-dc490.appspot.com",
+ messagingSenderId:"1062975092523",
+ appId:"1:1062975092523:web:3750d0e5722cae7767b76e",
+ measurementId:"G-6VVS4MSJBT"
+};
+const app=initializeApp(firebaseConfig);
+const auth=getAuth(app);
+const db=getFirestore(app);
 
-    .q { margin:6px 0 0; font-weight:700; }
-    .prevLabel{ font-size:12px; color:#475569; margin-top:6px; }
-    .prevAns{ background:#f8fafc; border:1px solid #e2e8f0; }
-    .divider{ height:1px; background:var(--line); margin:12px 0; }
-  </style>
+// 🔹 특별한 날 일부 (예시 3개만 테스트용)
+const QUESTIONS={
+ "03-02":{title:"3월 2일 · 개학",questions:{
+  low:["여러분은 '개학'하면 어떤 것이 떠오르나요?","개학 전날 우리는 어떤 마음을 느낄 수 있을까요?","우리는 개학날 느끼는 여러가지 마음을 누구와 말할 수 있을까요?"],
+  mid:["새로운 친구를 사귈 때 어떤 감정을 느끼나요?","개학을 앞두고 가장 걱정되는 것은 무엇인가요?","친구의 마음을 알아차리는 방법은 어떤 게 있을까요?"],
+  high:["처음 만난 친구에게 어떻게 인사하면 좋을까요?","먼저 다가가는 것이 어려울 때는 어떻게 하는 것이 좋을까요?","친구를 사귀기 위한 여러분의 방법은 무엇인가요?"]
+ }},
+ "03-20":{title:"3월 20일 · 행복의 날",questions:{
+  low:["여러분이 살면서 가장 행복했던 날은 언제인가요?","나는 어떤 순간에 행복하다고 느끼나요?","행복할 때 내 얼굴은 어떤 표정일까요?"],
+  mid:["나에게 '진짜 행복'이란 무엇인가요?","최근 언제 가장 행복했나요?","친구의 행복을 위해 내가 해줄 수 있는 건 무엇일까요?"],
+  high:["사람들마다 행복한 순간은 같을까요, 다를까요?","누군가를 행복하게 해준 적이 있나요?","행복을 함께 나누는 것은 어떻게 다를까요?"]
+ }},
+ "10-10":{title:"10월 10일 · 정신건강의 날",questions:{
+  low:["오늘 여러분의 마음 날씨는 어떤가요?","마음 날씨가 흐린 날 우리는 무엇을 할 수 있을까요?","내 마음에게 해주고 싶은 말이 있다면?"],
+  mid:["오늘 나의 감정을 색깔로 표현한다면?","마음이 힘들 때 도와줄 사람은?","기분이 좋아지는 나만의 방법은?"],
+  high:["오늘 나의 감정을 색깔로 표현한다면?","마음을 건강하게 유지하는 건 왜 중요할까요?","여러분은 어떤 노력을 하나요?"]
+ }}
+};
 
-  <!-- Firebase SDKs (성공버전과 동일: v11 모듈 방식) -->
-  <script type="module">
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } 
-      from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } 
-      from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+// 학년군 구분
+function band(n){n=Number(n||1);if(n<=2)return'low';if(n<=4)return'mid';return'high';}
 
-    // ✅ Firebase 설정 (네 프로젝트 그대로)
-    const firebaseConfig = {
-      apiKey: "AIzaSyCUvpi0A00lc9t4Aamo6jCL5ZeKSppPmVM",
-      authDomain: "haru-dc490.firebaseapp.com",
-      databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
-      projectId: "haru-dc490",
-      storageBucket: "haru-dc490.appspot.com",
-      messagingSenderId: "1062975092523",
-      appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
-      measurementId: "G-6VVS4MSJBT"
-    };
+// DOM 로드 후 실행
+window.addEventListener("DOMContentLoaded",()=>{
+ const loginView=document.getElementById("loginView");
+ const mainView=document.getElementById("mainView");
+ const loginBtn=document.getElementById("loginBtn");
+ const signupBtn=document.getElementById("signupBtn");
+ const logoutBtn=document.getElementById("logoutBtn");
+ const yearSel=document.getElementById("yearSel");
+ const monthSel=document.getElementById("monthSel");
+ const gradeSel=document.getElementById("gradeSel");
+ const calEl=document.getElementById("calendar");
+ const qBox=document.getElementById("qBox");
+ const saveBtn=document.getElementById("saveBtn");
+ const qTitle=document.getElementById("qTitle");
 
-    // ✅ Firebase 초기화 (성공버전 유지)
-    const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
-    const db = getFirestore(app);
-    console.log("✅ Firebase initialized OK");
+ let viewYear=new Date().getFullYear();
+ let viewMonth=new Date().getMonth();
 
-    // ====== 성공버전의 로그인/회원가입/로그아웃 로직 유지 ======
-    const loginView = document.getElementById("loginView");
-    const mainView  = document.getElementById("mainView");
-    const loginBtn  = document.getElementById("loginBtn");
-    const signupBtn = document.getElementById("signupBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const statusEl  = document.getElementById("status");
+ // 로그인
+ signupBtn.onclick=async()=>{
+  const id=document.getElementById("userid").value.trim();
+  const pw=document.getElementById("password").value.trim();
+  if(!id||!pw)return alert("입력!");
+  const email=`${id}@id.onmaum`;
+  try{await createUserWithEmailAndPassword(auth,email,pw);alert("회원가입 성공");}
+  catch(e){alert(e.message);}
+ };
+ loginBtn.onclick=async()=>{
+  const id=document.getElementById("userid").value.trim();
+  const pw=document.getElementById("password").value.trim();
+  if(!id||!pw)return alert("입력!");
+  const email=`${id}@id.onmaum`;
+  try{await signInWithEmailAndPassword(auth,email,pw);
+    loginView.style.display="none";mainView.style.display="block";
+    renderCal();
+  }catch(e){alert(e.message);}
+ };
+ logoutBtn.onclick=async()=>{await signOut(auth);mainView.style.display="none";loginView.style.display="block";};
 
-    signupBtn.addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value.trim();
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
-      const email = `${id}@id.onmaum`;
-      try {
-        await createUserWithEmailAndPassword(auth, email, pw);
-        alert("회원가입 성공!");
-      } catch (e) {
-        alert("회원가입 실패: " + e.message);
-      }
-    });
+ // 셀렉트 구성
+ for(let y=2024;y<=2026;y++){const o=document.createElement("option");o.value=y;o.textContent=y;yearSel.appendChild(o);}
+ yearSel.value=viewYear;
+ for(let m=1;m<=12;m++){const o=document.createElement("option");o.value=m-1;o.textContent=m;monthSel.appendChild(o);}
+ monthSel.value=viewMonth;
 
-    loginBtn.addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value.trim();
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
-      const email = `${id}@id.onmaum`;
-      try {
-        await signInWithEmailAndPassword(auth, email, pw);
-        loginView.style.display = "none";
-        mainView.style.display  = "block";
-        statusEl.textContent    = "로그인 유지됨";
-        bootDiary(); // ← 달력/질문 시스템 시작
-      } catch (e) {
-        alert("로그인 실패: " + e.message);
-      }
-    });
+ yearSel.onchange=()=>{viewYear=Number(yearSel.value);renderCal();}
+ monthSel.onchange=()=>{viewMonth=Number(monthSel.value);renderCal();}
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      mainView.style.display  = "none";
-      loginView.style.display = "block";
-    });
+ function renderCal(){
+  calEl.innerHTML="";
+  const first=new Date(viewYear,viewMonth,1);
+  const last=new Date(viewYear,viewMonth+1,0);
+  const start=first.getDay();
+  for(let i=0;i<start;i++){calEl.appendChild(document.createElement("div"));}
+  for(let d=1;d<=last.getDate();d++){
+   const cell=document.createElement("div");cell.className="day";
+   const key=`${String(viewMonth+1).padStart(2,"0")}-${String(d).padStart(2,"0")}`;
+   if(QUESTIONS[key]){
+    const s=document.createElement("div");s.className="star";s.textContent="★";cell.appendChild(s);
+    const tag=document.createElement("div");tag.className="tag";tag.textContent=QUESTIONS[key].title.split("·")[1];cell.appendChild(tag);
+   }
+   const num=document.createElement("div");num.className="num";num.textContent=d;cell.appendChild(num);
+   if(viewYear===new Date().getFullYear()&&viewMonth===new Date().getMonth()&&d===new Date().getDate())cell.classList.add("today");
+   cell.onclick=()=>openDay(key);
+   calEl.appendChild(cell);
+  }
+ }
 
-    // ==========================
-    //     ✿ Diary System ✿
-    // ==========================
-    const yearPicker  = document.getElementById("yearPicker");
-    const monthPicker = document.getElementById("monthPicker");
-    const gradePicker = document.getElementById("gradePicker"); // 1~6학년
-    const calGrid     = document.getElementById("calGrid");
-    const dayTitle    = document.getElementById("dayTitle");
-    const dayHint     = document.getElementById("dayHint");
-    const qaArea      = document.getElementById("qaArea");
-    const saveBtn     = document.getElementById("saveBtnDiary");
-    const prevYearTag = document.getElementById("prevYearTag");
+ async function openDay(key){
+  qBox.innerHTML="";
+  if(!QUESTIONS[key]){qTitle.textContent="등록된 질문이 없습니다.";return;}
+  const g=band(gradeSel.value);
+  const qset=QUESTIONS[key].questions[g];
+  qTitle.textContent=QUESTIONS[key].title;
+  const user=auth.currentUser;
+  const docId=`${user.uid}_${viewYear}_${key}`;
+  const ref=doc(db,"entries",docId);
+  const snap=await getDoc(ref);
+  const prev=snap.exists()?snap.data():{};
+  qset.forEach((q,i)=>{
+   const p=document.createElement("p");p.textContent=`Q${i+1}. ${q}`;qBox.appendChild(p);
+   const ta=document.createElement("textarea");ta.id=`a${i}`;ta.value=prev.answers?prev.answers[i]||"":"";qBox.appendChild(ta);
+  });
+  saveBtn.onclick=async()=>{
+   const ans=[...qBox.querySelectorAll("textarea")].map(t=>t.value);
+   await setDoc(ref,{year:viewYear,key,band:g,answers:ans,savedAt:new Date().toISOString()});
+   alert("저장 완료!");
+  };
+ }
 
-    // ===== 질문 데이터(25일 × 학년군별 3문항 = 75문항) =====
-    // key: 'MM-DD' (양력) 또는 'L-MM-DD' (음력)
-    const QUESTIONS={
-      '03-02':{title:'3월 2일 · 개학',lunar:false,questions:{
-        low:["여러분은 '개학'하면 어떤 것이 떠오르나요?","개학 전날 우리는 어떤 마음을 느낄 수 있을까요?","우리는 개학날 느끼는 여러가지 마음을 누구와 말할 수 있을까요?"],
-        mid:["새로운 친구를 사귈 때 어떤 감정을 느끼나요?","개학을 앞두고 가장 걱정되는 것은 무엇인가요?","친구의 마음을 알아차리는 방법은 어떤 게 있을까요?"],
-        high:["처음 만난 친구에게 어떻게 인사하면 좋을까요?","먼저 다가가는 것이 어려울 때는 어떻게 하는 것이 좋을까요?","친구를 사귀기 위한 여러분의 방법은 무엇인가요?"]}},
-      '03-20':{title:'3월 20일 · 국제 행복의 날',lunar:false,questions:{
-        low:['여러분이 살면서 가장 행복했던 날은 언제인가요?','나는 어떤 순간에 행복하다고 느끼나요?','행복할 때 내 얼굴은 어떤 표정일까요?'],
-        mid:["나에게 '진짜 행복'이란 무엇인요?",'나는 최근에 언제 가장 행복했나요?','친구의 행복을 위해 내가 해줄 수 있는 건 무엇일까요?'],
-        high:['사람들마다 행복한 순간은 같을까요, 다를까요?','여러분이 누군가를 행복하게 해준 적이 있다면 언제, 누구에게 인가요?','행복을 혼자만 느끼는 것과 함께 나누는 것은 어떻게 다를까요?']}},
-      '04-01':{title:'4월 1일 · 멸종위기종의 날',lunar:false,questions:{
-        low:['멸종위기종에는 어떤 동물이 있을까요?','사라지고 있는 동물들이 내게 말을 건다면, 어떤 말을 할까요?','사라지고 있는 동물들을 위해 내가 할 수 있는 일에는 어떤 것이 있을까요?'],
-        mid:['사라져가는 동물들에게 미안했던 순간이 있었나요?','내가 아끼는 생명체는 무엇이며, 왜 소중할까요?','동물을 보호하기 위해 내가 할 수 있는 행동은 무엇일까요?'],
-        high:['많은 동물들이 멸종한다면 인간에게는 어떤 영향을 미칠까요?','친구가 자연을 해치는 행동을 한다면, 나는 어떻게 행동해야 할까요?','멸종위기 동물을 보호하기 위해 내가 실천할 수 있는 일은 무엇일까요?']}},
-      '04-20':{title:'4월 20일 · 장애인의 날',lunar:false,questions:{
-        low:['여러분은 몸을 다쳐서 불편을 겪은 일이 있나요?','나와 조금 다르게 행동하는 친구를 보면 어떤 생각이 드나요?','어떻게하면 그 친구와 잘 지낼 수 있을까요?'],
-        mid:['몸이 불편한 친구들은 어떤 하루를 보낼까요?','장애가 있는 친구가 수업이나 놀이에서 불편함을 느낀다면, 나는 어떤 도움을 줄 수 있을까요?','장애인과 비장애인이 함께 생활하기 위해 바꿀 수 있는 공간이나 규칙은 무엇이 있을까요?'],
-        high:['우리 나라는 장애인이 살기 좋은 곳이라고 생각하나요?','장애인에게 장애란 어떤 의미일까요?','장애를 틀림이 아닌 다름으로 존중하려면 어떻게 해야 할까요?']}},
-      '04-25':{title:'4월 25일 · 법의 날',lunar:false,questions:{
-        low:['여러분은 우리 반의 규칙을 잘 지키고 있나요?','만약 규칙이 없다면 어떤 일이 생길까요?','우리 반을 위해 꼭 필요한 규칙은 무엇이라고 생각하나요?'],
-        mid:['만약 규칙이 없다면 학교생활은 어떻게 달라질까요?','우리 반 친구들이 함께 지켜야 할 약속을 한 가지 정한다면 무엇이 좋을까요?','친구와의 다툼에서 규칙이 도움이 되었던 적이 있었나요?'],
-        high:['규칙이나 법이 없다면 어떤 일이 생길까요?','왜 사람들은 규칙이나 법을 정할까요?','만약 내가 규칙을 어긴 것을 아무도 모른다면, 그냥 넘어가도 될까요?']}},
-      '05-05':{title:'5월 5일 · 어린이날',lunar:false,questions:{
-        low:['어린이날은 언제인가요?','자랑스러운 어린이인 나의 장점을 말해볼까요?','나는 나의 어떤 점이 가장 마음에 드나요?'],
-        mid:['나는 어떤 점에서 특별하고 소중한 존재일까요?','어린이날 꼭 하고 싶은 일이 있나요?','내가 어른이 되면 어린이에게 무엇을 해주고 싶은가요?'],
-        high:['여러분에게 가장 중요한 어린 권리는 무엇이고, 왜 그렇게 생각하나요?','전쟁이나 가난 때문에 학교에 다니지 못하거나, 일해야 하는 어린이들의 마음은 어떨까요?','모든 어린이가 같은 권리를 누리려면, 어떤 도움이 필요할까요?']}},
-      '05-20':{title:'5월 20일 · 꿀벌의 날',lunar:false,questions:{
-        low:["여러분은 '꿀벌'하면 무엇이 떠오르나요?","만약 꿀벌이 나에게 말을 걸면 뭐라고 할까요?","나는 꿀벌에게 어떤 말을 해줄 수 있을까요?"],
-        mid:['꿀벌이 없다면 세상이 어떻게 변할까요?','꿀벌이 사라지지 않도록 어떻게 도와야 할까요?','작지만 큰 도움을 주는 존재에는 또 무엇이 있을까요?'],
-        high:['만약 꿀벌이 모두 사라진다면 어떤 일이 생길까요?','친환경 농산물을 고르는 것이 왜 꿀벌을 보호하는 데 도움이 될까요?','오늘 여러분의 행동은 환경에 어떤 영향을 미칠까요?']}},
-      '06-18':{title:'6월 18일 · 국제 증오심 표현 반대의 날',lunar:false,questions:{
-        low:['여러분은 친구가 한 말 때문에 속상했던 적이 있나요?','여러분 어떤 말을 들으면 기분이 좋아지나요?','더 좋은 세상을 만들기 위해 다른 사람에게 해주면 좋을 것 같은 말에는 무엇이 있을까요?'],
-        mid:['내가 상처받았던 친구의 말 한마디는 무엇이었나요?','내가 상처받았던 친구의 행동은 무엇이었나요?','화가 나거나 서운할 때 어떻게 표현하면 좋을까요?'],
-        high:['친구의 말 중 나를 기분 좋게 한 말은 무엇인가요?','친구가 나에게 상처 주는 말을 했을 때, 어떻게 하면 싸우지 않고 내 마음을 전할 수 있을까요?','우리 반 모두가 존중받으려면 어떤 대화 약속이 필요할까요?']}},
-      '06-21':{title:'6월 21일 · 세계 요가의 날',lunar:false,questions:{
-        low:['여러분은 요가를 해본 적이 있나요?','내 몸이 가장 편안해질 때는 언제인가요?','내가 가장 좋아하는 쉬는 방법은 무엇인가요?'],
-        mid:['몸과 마음이 지친 날, 나는 어떻게 회복하나요?','마음의 숨을 쉰다는 건 어떤 의미일까요?','내가 평온해지는 시간과 공간은 언제, 어디일까요?'],
-        high:['여러분은 스트레스가 쌓일 때 어떻게 해소하나요?','짜증이 날 때 바로 화 내기 vs 마음 가라 앉히기 중 어떤 선택을 주로 하나요?','자신의 생활 습관 중 내 몸과 마음에 좋지 않은 습관은 무엇인가요?']}},
-      '07-30':{title:'7월 30일 · 국제 우정의 날',lunar:false,questions:{
-        low:["여러분은 '친구'하면 무엇이 떠오르나요?","친구와 사이가 좋아질 때 나는 어떤 마음이 드나요?","친구에게 내가 먼저 해줄 수 있는 좋은 말에는 어떤 것이 있을까요?"],
-        mid:['친구와의 우정을 지키기 위해 노력한 적이 있었나요?','나의 단짝 친구를 떠올리면 어떤 마음이 드나요?','진짜 친구란 어떤 친구일까요?'],
-        high:['우정은 왜 소중할까요?','친구와 갈등이 있을 때, 여러분은 주로 먼저 다가가는 쪽인가요, 기다리는 쪽인가요?',"\'친구는  OO이다\' 라고 표현히고자 할 때 빈칸에 어울리는 말은 어떤 것이 있을까요?"]}},
-      'L-08-15':{title:'8월 15일(음력) · 추석',lunar:true,questions:{
-        low:["여러분은 '추석'하면 무엇이 떠오르나요?","오랜만에 친척들을 만나면 어떤 마음이 드나요?","추석에 가족들과 마음을 나누며 함께 할 수 있는 것에는 어떤 것이 있을까요?"],
-        mid:["추석에 가족(친척)과 함께 보낸 소중한 순간은 언제였나요?","추석에 가족(친척)에게 감사한 마음을 어떻게 표현하면 좋을까요?","나를 아껴주시는 친척들께 전하고 싶은 진심 어린 말 한마디는?"],
-        high:["오랜만에 만난 친척에게 듣고 싶은 말은 무엇인가요?","가족들이 그냥 하는 말이 내게 상처가 될 때, 어떻게 하면 솔직하고 예의 있게 말할 수 있을까요?","혼자 조용히 있는 친척 동생이 있다면, 나라면 어떻게 할 것인요?"]}},
-      '09-10':{title:'9월 10일 · 세계 자살예방의 날',lunar:false,questions:{
-        low:["여러분은 속상하거나 매우 슬펐던 적이 있나요?","속상하거나 슬펐을 때, 나에게 위로가 된 것은 무엇이었나요?","내가 속상하거나 외로울 때, 내 마음에게 어떤 말을 해주고 싶나요?"],
-        mid:["여러분의 슬픈 마음을 누구에게 털어놓을 수 있나요?","마음이 힘든 친구에게 건네고 싶은 위로의 말은 무엇인가요?","감정을 숨기고 계속해서 참는다면 마음이 어떨까요?"],
-        high:["여러분은 세상에서 혼자라는 생이 든 적이 있나요?","힘들었던 순간 누군가의 말이나 행동 덕분에 위로 받았던 경험이 있나요?","마음이 힘든 친구가 있다면 어떤 위로의 말을 해주면 좋을까요?"]}},
-      '09-21':{title:'9월 21일 · 국제 평화의 날',lunar:false,questions:{
-        low:["여러분은 '평화' 하면 무엇이 떠오르나요?","오늘 나의 말과 행동은 친구에게 평화로운 느낌을 주었을까요?","우리 반의 평화를 위해 나는 무엇을 할 수 있을까요?"],
-        mid:["친구와 멀어질까봐 불편한 마음을 털어놓지 못했던 경험이 있나요?","친구와의 갈등을 평화롭게 해결했던 적이 있었나요?","교실에서 평화를 지키기 위해 내가 할 수 있는 작은 일은 무엇이 있을까요?"],
-        high:["평화란 왜 중요할까요?","여러분은 최근에 친구와 다퉜을 때, 갈등을 어떻게 해결했나요?","내가 평화를 지키기 위해 할 수 있는 일은 무엇이 있을까요?"]}},
-      '10-02':{title:'10월 2일 · 국제 비폭력의 날',lunar:false,questions:{
-        low:["화를 내고 나면 어떤 마음이 드나요?","화가 날 때 소리를 지르지 않고 마음을 표현해본 적이 있나요?","화가 날 때 어떻게 표현하면 내 마음의 평화에 도움이 될까요?"],
-        mid:["여러분은 화가 날 때 주로 어떻게 반응하나요?","화가 날 때 평소와 다른 신체적인 변화를 느껴본 적이 있나요? 있다면 어떤 변화였는지 말해볼까요?","친구와 갈등이 생겼을 때 폭력 없이 내 마음을 어떻게 표현하면 좋을까요?"],
-        high:["오늘 하루, 나는 누군가에게 상처 주는 말이나 행동을 한 적이 있을까요?","서로 다른 의견이 있을 때 싸우지 않고 이야기하는 방법에는 어떤 것이 있을까요?","폭력적인 말과 행동은 관계에 어떤 영향을 미칠까요?"]}},
-      '10-10':{title:'10월 10일 · 정신건강의 날',lunar:false,questions:{
-        low:["오늘 여러분의 마음 날씨는 어떤가요?","마음 날씨가 흐린 날, 우리는 무엇을 할 수 있을까요?","내 마음에게 해주고 싶은 말이 있다면 무엇인가요?"],
-        mid:["오늘 나의 감정을 색깔로 표현한다면 어떤 색깔일까요?","마음이 힘들 때 나를 도와줄 사람은 누가 있을까요?","기분이 좋아지는 나만의 방법이 있나요?"],
-        high:["오늘 나의 감정을 색깔로 표현한다면 어떤 색깔인가요?","마음을 건강하게 유지하는 것은 왜 중요할까요?","마음을 건강하게 유지하기 위해서 여러분은 어떤 노력을 하고 있나요?"]}},
-      '11-16':{title:'11월 16일 · 국제 관용의 날',lunar:false,questions:{
-        low:["내가 실수를 했을 때 친구가 너그럽게 용서해준 적이 있나요?","그 때 나는 어떤 생각이 들었나요?","나에게 실수를 한 친구에게 속상한 내 마음을 어떻게 표현하면 좋을까요?"],
-        mid:["친구의 실수로 불편했던 경험이 있나요? 그때 나는 어떻게 행동했었나요?","나도 모르게 실수를 저질러 다른 사람을 불편하게 했을 때 어떤 감정이 드나요?","용서가 필요한 까닭은 무엇일까요?"],
-        high:["관용은 왜 소중할까요?","성격이 완전히 다른 친구랑 모둠 활동을 하면 어떤 점이 어렵고, 또 어떤 점이 좋을까요?","다름을 인정해주는 말이나 행동에는 어떤 것이 있을까요?"]}},
-      '11-19':{title:'11월 19일 · 아동학대 예방의 날',lunar:false,questions:{
-        low:["내 마음이 '이건 싫어요!' 하고 말하고 싶을 땐 언제인가요?","그럴 때 나는 어떤 말을 할 수 있을까요?","내가 힘들 때 나를 도와줄 수 있는 어른은 누구인가요?"],
-        mid:["어른들의 관심이 필요한 친구를 보았을 때 여러분은 어떤 행동을 할 수 있을까요?","나를 힘들게 하는 말과 행동을 하는 어른들로부터 나를 보호하는 방법에는 어떤 것들이 있을까요?","어른들에게 도움을 요청하는 말, 어떻게 시작할까요?"],
-        high:["\"괜찮아?\"라고 묻는 한 마디 말로도 힘이 되어줄 수 있을까요?","학대를 목격했을 때, 어른에게 알리는 것은 참견일까요, 책임 있는 행동일까요?","위험에 처한 누군가를 도와주려면 어떤 마음이 필요할까?"]}},
-      '12-05':{title:'12월 5일 · 국제 자원봉사의 날',lunar:false,questions:{
-        low:["여러분은 누군가를 도와준 적이 있나요?","그 때 그 사람은 어떤 얼굴을 했나요?","다음에는 누구를 도와주고 싶나요?"],
-        mid:["누군가에게 도움을 주었을 때 여러분은 어떤 감정을 느끼나요?","도움을 주는 것과 받는 것 중 어떤 것이 더 어렵다고 생각하나요?","가족 외에 여러분에게 도움을 주는 사람 중 감사 인사를 전하고 싶은 사람은 누구인가요?"],
-        high:["누군가를 도와줄 때 어떤 기분이 드나요?","여러분의 주변에는 어떤 도움이 필요한 사람들이 있을까요?","여러분이 다른 사람을 도울 수 있는 방법에는 어떤 것이 있을까요?"]}},
-      '12-10':{title:'12월 10일 · 인권의 날',lunar:false,questions:{
-        low:["친구를 존중한다는 건 어떤 행동일까요?","여러분은 누군가에게 존중받을 때 어떤 느낌이 드나요?","나는 친구를 어떻게 존중하고 있을까요?"],
-        mid:["여러분의 이름은 어떤 뜻을 가지고 있나요?","누구나 존중받아야 하는 이유가 무엇이라고 생각하나요?","친구의 권리를 지켜주기 위해 내가 할 수 있는 일은 무엇인가요?"],
-        high:["친구가 나를 무시하거나 놀린다면 어떤 기분일까요?","누군가 불공평한 대우를 받을 때 나는 어떤 선택을 해야 할까요?","모두가 존중받는 반을 만들기 위해 내가 오늘부터 할 수 있는 일은 무엇이 있을까요?"]}},
-      '12-21':{title:'12월 21일 · 세계 명상의 날',lunar:false,questions:{
-        low:["지금 내 마음은 어떤 색깔일까요?","조용히 눈을 감아 보세요. 내 마음에서 어떤 느낌이 올라오나요?","내 마음이 '쉬고 싶다'고 말할 때, 나는 어떤 행동을 하면 좋을까요?"],
-        mid:["올해 가장 기억에 남는 감정은 무엇인가요?","지금 나 자신에게 해주고 싶은 말은 무엇인가요?","자신을 되돌아보는 시간이 왜 필요하다고 생각하나요?"],
-        high:["화가 났을 때 바로 말하거나 행동하면 어떤 일이 생길까?","오늘 있었던 일 중 내가 잘한 일은 무엇인가요?","가만히 나를 돌아보는 시간은 나에게 어떤 도움이 될까요?"]}},
-      'L-01-01':{title:'1월 1일(음력) · 설날',lunar:true,questions:{
-        low:["여러분은 '설날'하면 무엇이 떠오르나요?","오랜만에 가족과 친척들을 만나면 어떤 기분이 드나요?","가족들과 더 잘지내기 위해서 나는 어떤 노력을 할 수 있을까요?"],
-        mid:["우리 가족(친척) 중에서 나는 어떤 역할을 하고 있을까요?","설날 가족과 함께 했던 기억 중 가장 따뜻했던 순간은 언제인가요?","가족(친척)중에서 고마운 마음을 전하고 싶은 사람은 누구일까요? 그 이유는 무엇일까요?"],
-        high:["명절에 가족들 사이에 벌어질 수 있는 갈등에는 어떤 것들이 있을까요?","어른들이 궁금해하시는 질문에 대답하기 불편할 때, 예의를 지키며 내 기분도 지키려면 어떻게 말해야 할까요?","모두가 즐거운 설날을 보내기 위해 내가 할 수 있는 일은 무엇이 있을까요?"]}},
-      '01-04':{title:'1월 4일 · 세계 점자의 날',lunar:false,questions:{
-        low:["여러분은 점자를 본 적이 있나요?","눈을 감고 무슨 물건인지 맞추려면 어떻게 해야 할까요?","여러분은 누군가의 마음을 손끝으로 만지듯 조심스럽게 느껴본 적이 있나요?"],
-        mid:["나의 감각 중 하나를 잃는다면 어떤 기분이 들까요?","점자를 사용하는 사람은 세상을 어떻게 느낄까요?","서로 다름에 대해 평소에 나는 어떤 태도를 가지고 있나요?"],
-        high:["어느 날 갑자기 눈이 보이지 않는다면 어떤 기분이 들까요?","시각장애인에게 점자는 어떤 의미일까요?","우리 학교에 시각장애인 친구가 있다면,어떤 점이 가장 불편할까요?"]}},
-      '02-10':{title:'2월 10일 · 세계 콩의 날',lunar:false,questions:{
-        low:["여러분은 콩을 좋아하나요?","건강한 몸을 만드는 음식에는 콩 말고 무엇이 있을까요?","건강한 마음을 만드는 '마음의 콩'에는 무엇이 있을까요?"],
-        mid:["씨앗 하나가 자라기 위해 필요한 것들은 무엇이 있을까요?","건강한 식생활을 위해 할 수 있는 일은 무엇일까요?","콩이 천천히 자라듯 나는 어떤 가능성을 품고 자라고 있을까요?"],
-        high:["여러분이 콩을 좋아하거나 싫어하는 이유는 무엇인가요?","콩을 키우는 것과 소를 키우는 것은 환경에 각각 어떤 영향을 미칠까요?","우리가 먹을 것을 결정할 때 고려해야 할 요소에는 어떤 것이 있을까요?"]}},
-      '02-21':{title:'2월 21일 · 국제 모국어의 날',lunar:false,questions:{
-        low:["여러분은 어떤 말을 들을 때 기분이 좋은가요?","여러분은 어떤 말을 들을 때 마음이 편안해지나요?","그 말은 왜 나를 따뜻하게 만들까요?"],
-        mid:["내가 가장 마음이 편해지는 말은 무엇인가요?","다른 나라의 언어를 들을 때 어떤 느낌이 드나요?","한국어를 배우려는 외국인에게 어떤 응원을 해주면 좋을까요?"],
-        high:["모국어를 잃어버린 사람들은 어떤 마음일까요?","다양한 언어와 문화를 존중해야 하는 까닭은 무엇일까요?","우리말을 지키기 위해 내가 할 수 있는 일은 무엇일까요?"]}},
-      '03-01':{title:'3월 1일 · 제로 차별의 날',lunar:false,questions:{
-        low:["나와 다르게 생기거나 다른 옷을 입은 친구를 보면 어떤 생각이 드나요?","'다르다'와 '틀리다'는 어떤 차이가 있을까요?","나와는 다른 친구에게 우리는 어떤 말을 해줄 수 있을까요?"],
-        mid:["차이와 차별은 어떻게 다르다고 생각하나요?","나는 평소에 피부색이나 생김새가 다른 사람에 대해 어떤 태도를 가지고 있요?","나와 다른 친구에게서 배울 점은 무엇인가요?"],
-        high:["여러분은 누군가를 차별해보거나, 차별 받아본 적 있나요?","피부색이 달라서, 남자/여자라는 이유로 차별받는다면 어떤 기분일까요?","서로의 다름을 이해하고 존중하는 것은 왜 중요할까요?"]}}
-    };
-
-    // ===== 학년→밴드 매핑 =====
-    function bandFromGradeNum(n){
-      n = Number(n||1);
-      if(n<=2) return 'low';
-      if(n<=4) return 'mid';
-      return 'high';
-    }
-
-    // ===== 음력→양력 변환(해당 연도) =====
-    const lunarFmt = (()=>{ try{
-      return new Intl.DateTimeFormat('en-u-ca-chinese',{month:'numeric', day:'numeric'});
-    }catch{ return null; }})();
-    function lunarToSolarKey(year,mm,dd){
-      if(!lunarFmt) return null;
-      const start=new Date(year,0,1), end=new Date(year,11,31);
-      for(let d=new Date(start); d<=end; d.setDate(d.getDate()+1)){
-        const parts=lunarFmt.formatToParts(d);
-        const m=Number(parts.find(p=>p.type==='month').value);
-        const dn=Number(parts.find(p=>p.type==='day').value);
-        if(m===mm && dn===dd){
-          return `${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-        }
-      }
-      return null;
-    }
-    function buildLunarMap(year){
-      const map={};
-      Object.keys(QUESTIONS).filter(k=>k.startsWith('L-')).forEach(k=>{
-        const [_,mmm,ddd]=k.split('-'); // 'L','MM','DD'
-        const solar=lunarToSolarKey(year, Number(mmm), Number(ddd));
-        if(solar) map[solar]=k;
-      });
-      return map;
-    }
-
-    // ===== 상태 =====
-    const today=new Date();
-    let viewYear = today.getFullYear();
-    let viewMonth= today.getMonth(); // 0~11
-    let lunarMap = buildLunarMap(viewYear);
-    let currentSolarKey=null; // 'MM-DD'
-    let currentQKey=null;     // 질문키(양력 or L-*)
-    let currentBand='low';
-
-    // ===== 초기 부팅 =====
-    function bootDiary(){
-      // UI pickers
-      fillYearMonthPickers();
-      // 학년 기억/기본
-      gradePicker.value = localStorage.getItem('om:grade') || '';
-      handleBandChange();
-      renderCalendar();
-      autoSelectTodayIfSpecial();
-    }
-
-    // ===== 픽커 구성 =====
-    function fillYearMonthPickers(){
-      yearPicker.innerHTML='';
-      for(let y=today.getFullYear()-2; y<=today.getFullYear()+2; y++){
-        const o=document.createElement('option');
-        o.value=y; o.textContent=`${y}년`;
-        if(y===viewYear) o.selected=true;
-        yearPicker.appendChild(o);
-      }
-      monthPicker.innerHTML='';
-      for(let m=1;m<=12;m++){
-        const o=document.createElement('option');
-        o.value=m-1; o.textContent=`${m}월`;
-        if(m-1===viewMonth) o.selected=true;
-        monthPicker.appendChild(o);
-      }
-    }
-
-    // ===== 캘린더 렌더링 =====
-    function sameDate(a,b){ return a.getFullYear()===b.getFullYear() && a.getMonth()===b.getMonth() && a.getDate()===b.getDate(); }
-    function renderCalendar(){
-      calGrid.innerHTML='';
-      lunarMap = buildLunarMap(viewYear);
-      const first=new Date(viewYear,viewMonth,1);
-      const startIdx=(first.getDay()+7)%7;
-      const daysInMonth=new Date(viewYear, viewMonth+1,0).getDate();
-      // DOW header
-      const dows=['일','월','화','수','목','금','토'];
-      dows.forEach(d=>{ const el=document.createElement('div'); el.className='dow'; el.textContent=d; calGrid.appendChild(el); });
-      // prefix blanks
-      for(let i=0;i<startIdx;i++){ const filler=document.createElement('div'); calGrid.appendChild(filler); }
-      // days
-      for(let d=1; d<=daysInMonth; d++){
-        const cell=document.createElement('button'); cell.className='day';
-        const dateObj=new Date(viewYear, viewMonth, d);
-        const isToday=sameDate(dateObj,today);
-        if(isToday) cell.classList.add('today');
-        const solarKey=`${String(viewMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-        const qKey = QUESTIONS[solarKey]? solarKey : (lunarMap[solarKey]||null);
-        // num
-        const num = document.createElement('div'); num.className='num'; num.textContent=d; cell.appendChild(num);
-        // special label
-        if(qKey){
-          const star=document.createElement('div'); star.className='star'; star.textContent='★'; cell.appendChild(star);
-          const t = QUESTIONS[qKey].title;
-          const name = t.includes('·')? t.split('·')[1].trim(): t;
-          const tag=document.createElement('div'); tag.className='tag'; tag.textContent=name + (qKey.startsWith('L-')? ` (양력 ${solarKey})`:'');
-          cell.appendChild(tag);
-          cell.title = t + (qKey.startsWith('L-')? ` (양력 ${solarKey})`:'');
-        }
-        cell.addEventListener('click', ()=> selectDate(solarKey,dateObj));
-        calGrid.appendChild(cell);
-      }
-    }
-
-    // ===== 날짜 선택 -> 질문 렌더 =====
-    async function selectDate(solarKey, dateObj){
-      currentSolarKey = solarKey;
-      currentQKey = QUESTIONS[solarKey]? solarKey : (lunarMap[solarKey]||null);
-
-      if(!currentQKey){
-        dayTitle.textContent = `${viewYear}년 ${viewMonth+1}월 ${dateObj.getDate()}일 · 등록된 특별일 없음`;
-        dayHint.textContent  = '선택한 날짜에는 등록된 질문이 없어요';
-        qaArea.innerHTML = '';
-        saveBtn.disabled = true;
-        return;
-      }
-
-      const meta=QUESTIONS[currentQKey];
-      dayTitle.textContent = meta.title + (currentQKey.startsWith('L-')? ` (양력 ${solarKey})`:'');
-      dayHint.textContent  = currentQKey.startsWith('L-') ? `음력 ${currentQKey.slice(2)} → 양력 ${solarKey}` : `양력 ${solarKey} · 학년군별 3문항`;
-
-      // 학년군 결정
-      currentBand = bandFromGradeNum(gradePicker.value || 1);
-      const qs = meta.questions[currentBand];
-
-      // 전년도 로드
-      const prevYear = viewYear - 1;
-      prevYearTag.textContent = `${prevYear}년`;
-      const user = auth.currentUser;
-      const prevDocId = `${user.uid}_${prevYear}_${currentQKey}`;
-      const prevRef = doc(db, 'entries', prevDocId);
-      let prev = null;
-      try{
-        const snap = await getDoc(prevRef);
-        prev = snap.exists()? snap.data(): null;
-      }catch{}
-
-      // 금년도 로드
-      const curDocId = `${user.uid}_${viewYear}_${currentQKey}`;
-      const curRef = doc(db, 'entries', curDocId);
-      let cur = null;
-      try{
-        const snap = await getDoc(curRef);
-        cur = snap.exists()? snap.data(): null;
-      }catch{}
-
-      // 문항 그리기
-      qaArea.innerHTML='';
-      qs.forEach((q,idx)=>{
-        const blk=document.createElement('div');
-        blk.className='col card';
-        blk.style.padding='12px';
-
-        const qEl=document.createElement('p'); qEl.className='q'; qEl.textContent=`Q${idx+1}. ${q}`;
-        blk.appendChild(qEl);
-
-        // 전년도 답변
-        const prevText = prev?.answers?.[idx] || '';
-        if(prevText){
-          const pl=document.createElement('div'); pl.className='prevLabel'; pl.textContent='작년 답변';
-          const pt=document.createElement('textarea'); pt.className='prevAns'; pt.readOnly=true; pt.value=prevText;
-          blk.appendChild(pl); blk.appendChild(pt);
-        }
-
-        // 올해 입력
-        const ta=document.createElement('textarea');
-        ta.placeholder='여기에 내 답을 적어요';
-        ta.dataset.idx=idx;
-        // 올해 저장분이 있으면 채우기
-        const curText = cur?.answers?.[idx] || '';
-        if(curText) ta.value=curText;
-        blk.appendChild(ta);
-
-        qaArea.appendChild(blk);
-      });
-
-      saveBtn.disabled=false;
-    }
-
-    // ===== 저장 =====
-    saveBtn.addEventListener('click', async ()=>{
-      const user = auth.currentUser;
-      if(!user) return alert('로그인이 필요합니다.');
-      if(!currentQKey) return alert('달력에서 특별일을 선택하세요.');
-      const answers = Array.from(qaArea.querySelectorAll('textarea[data-idx]')).map(t=>t.value.trim());
-      const payload = {
-        uid: user.uid,
-        year: viewYear,
-        dayKey: currentQKey,          // 예: '10-10' 또는 'L-01-01'
-        solarKey: currentSolarKey,    // 항상 양력키 'MM-DD'
-        band: currentBand,            // low/mid/high
-        answers,
-        savedAt: new Date().toISOString()
-      };
-      try{
-        const docId = `${user.uid}_${viewYear}_${currentQKey}`;
-        await setDoc(doc(db,'entries',docId), payload);
-        alert('저장 완료!');
-      }catch(e){
-        alert('저장 실패: ' + e.message);
-      }
-    });
-
-    // ===== 학년/년도/월 변경 =====
-    function handleBandChange(){
-      const g = gradePicker.value || '';
-      if(g) localStorage.setItem('om:grade', g);
-      if(currentQKey) selectDate(currentSolarKey, new Date(viewYear, viewMonth, Number(currentSolarKey.split('-')[1])));
-    }
-
-    yearPicker.addEventListener('change', ()=>{
-      viewYear = Number(yearPicker.value);
-      lunarMap = buildLunarMap(viewYear);
-      renderCalendar();
-      autoSelectTodayIfSpecial();
-    });
-    monthPicker.addEventListener('change', ()=>{
-      viewMonth = Number(monthPicker.value);
-      renderCalendar();
-      autoSelectTodayIfSpecial();
-    });
-    gradePicker.addEventListener('change', handleBandChange);
-
-    // 오늘이 특별일이면 자동 선택
-    function autoSelectTodayIfSpecial(){
-      if(viewYear===today.getFullYear() && viewMonth===today.getMonth()){
-        const key=`${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
-        const isSpecial = QUESTIONS[key] || (lunarMap&&lunarMap[key]);
-        if(isSpecial) selectDate(key, today);
-      }
-    }
-  </script>
+ renderCal();
+});
+</script>
 </head>
 
 <body>
-  <!-- 로그인 뷰 (성공버전 원형 유지) -->
-  <div id="loginView" class="wrap" style="display:flex; align-items:center; justify-content:center; height:100dvh;">
-    <div class="card" style="width:400px; max-width:92%;">
-      <h1>온마음 성장일기 · 학생용 MVP</h1>
-      <p class="small">특별한 하루 × SEL 5-Years Diary</p>
-      <input id="userid" placeholder="아이디" />
-      <input id="password" type="password" placeholder="비밀번호" />
-      <div class="row">
-        <button id="loginBtn" class="col">로그인</button>
-        <button id="signupBtn" class="col ghost">회원가입</button>
-      </div>
-      <p class="small">GitHub Pages 테스트용 — Firebase Auth 연동</p>
-    </div>
+<div id="loginView" class="card">
+ <h1>온마음 성장일기</h1>
+ <input id="userid" placeholder="아이디">
+ <input id="password" type="password" placeholder="비밀번호">
+ <button id="loginBtn">로그인</button>
+ <button id="signupBtn" class="ghost">회원가입</button>
+</div>
+
+<div id="mainView" style="display:none;">
+ <div class="grid">
+  <div class="card">
+   <h3>📅 달력</h3>
+   <select id="yearSel"></select>
+   <select id="monthSel"></select>
+   <select id="gradeSel">
+    <option value="1">1학년</option>
+    <option value="2">2학년</option>
+    <option value="3">3학년</option>
+    <option value="4">4학년</option>
+    <option value="5">5학년</option>
+    <option value="6">6학년</option>
+   </select>
+   <div id="calendar" class="calendar"></div>
+   <button id="logoutBtn" class="ghost">로그아웃</button>
   </div>
-
-  <!-- 메인 뷰: 달력 + 학년/년도 선택 + 질문/저장 -->
-  <div id="mainView" class="wrap" style="display:none;">
-    <div class="row" style="justify-content:space-between; align-items:center;">
-      <h1>🌿 온마음 성장일기</h1>
-      <div class="row" style="gap:8px; align-items:center;">
-        <button id="logoutBtn" class="ghost">로그아웃</button>
-      </div>
-    </div>
-    <p id="status" class="small"></p>
-
-    <div class="grid">
-      <!-- 좌: 캘린더 카드 -->
-      <aside class="card">
-        <div class="row">
-          <div class="col">
-            <label class="small">년도</label>
-            <select id="yearPicker"></select>
-          </div>
-          <div class="col">
-            <label class="small">월</label>
-            <select id="monthPicker"></select>
-          </div>
-          <div class="col">
-            <label class="small">학년 (1~6)</label>
-            <select id="gradePicker">
-              <option value="">선택</option>
-              <option>1</option><option>2</option><option>3</option>
-              <option>4</option><option>5</option><option>6</option>
-            </select>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <div class="cal">
-          <div class="cal-grid" id="calGrid"></div>
-        </div>
-        <p class="small" style="margin-top:8px;">★ 표시된 날짜가 ‘특별한 날’이며, 셀 하단에 계기일명이 표시됩니다.</p>
-      </aside>
-
-      <!-- 우: 질문/답변 -->
-      <section class="card">
-        <div>
-          <div class="small">선택한 날짜</div>
-          <h3 id="dayTitle" style="margin:6px 0 0 0;">달력에서 날짜를 선택하세요</h3>
-          <div class="small" id="dayHint"></div>
-        </div>
-        <div class="divider"></div>
-
-        <div class="row">
-          <div class="small" style="padding:4px 8px; background:#eef2ff; border-radius:999px;">
-            전년도 비교: <b id="prevYearTag">—</b>
-          </div>
-        </div>
-
-        <div class="divider"></div>
-        <div id="qaArea" class="row"></div>
-
-        <div class="divider"></div>
-        <div class="row" style="justify-content:flex-end;">
-          <button id="saveBtnDiary" disabled>저장하기</button>
-        </div>
-      </section>
-    </div>
+  <div class="card">
+   <h3 id="qTitle">날짜를 선택하세요</h3>
+   <div id="qBox"></div>
+   <div class="divider"></div>
+   <button id="saveBtn">저장</button>
   </div>
+ </div>
+</div>
 </body>
 </html>
