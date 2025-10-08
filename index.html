@@ -493,26 +493,26 @@ function initDiaryOnce(){
       });
 
       saveDayBtn.addEventListener('click', saveCurrentDay);
-      // 🔹 로그아웃 버튼 기능 연결
+// 🔹 로그아웃 버튼 기능 연결
 const logoutBtn = document.getElementById("logoutBtn");
 if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     try {
       await signOut(auth);
- 
-    // ✅ 로그아웃 직후 화면 초기화 추가
-    document.getElementById("userid").value = "";
-    document.getElementById("password").value = "";
-    mainView.style.display = "none";
-    loginView.style.display = "block";
 
-    diaryInited = false;
-    console.log("✅ 로그아웃 성공 및 UI 초기화 완료");
-  } catch (e) {
-    console.error("로그아웃 실패:", e);
-    alert("로그아웃 실패: " + e.message);
-  }
-});
+      // ✅ 로그아웃 직후 화면 초기화
+      document.getElementById("userid").value = "";
+      document.getElementById("password").value = "";
+      mainView.style.display = "none";
+      loginView.style.display = "block";
+
+      diaryInited = false;
+      console.log("✅ 로그아웃 성공 및 UI 초기화 완료");
+    } catch (e) {
+      console.error("로그아웃 실패:", e);
+      alert("로그아웃 실패: " + e.message);
+    }
+  }); // ← 여기가 제일 중요! 괄호 닫기
 }
     }
 
@@ -736,6 +736,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
