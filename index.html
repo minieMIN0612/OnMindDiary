@@ -114,6 +114,10 @@
 
   <!-- 메인 화면 (성공버전의 영역 + 아래에 일기 기능 추가) -->
   <div id="mainView" class="card stack" style="display:none;">
+        <!-- 🔹 로그아웃 버튼 추가 (맨 위 우측 정렬) -->
+    <div class="row" style="justify-content:flex-end;">
+      <button id="logoutBtn" class="secondary">로그아웃</button>
+    </div>
     <!-- (성공버전의 간단 입력란: 원형 유지) -->
         <!-- ↓↓↓ 여기 아래로 ‘온마음 성장일기’ UI가 동적으로 추가됨 (buildDiaryUI) ↓↓↓ -->
   </div>
@@ -149,9 +153,6 @@ let diaryInited = false;
     const mainView  = document.getElementById("mainView");
     const loginBtn  = document.getElementById("loginBtn");
     const signupBtn = document.getElementById("signupBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const saveBtn   = document.getElementById("saveBtn");
-    const answerEl  = document.getElementById("answer");
 
     signupBtn.addEventListener("click", async () => {
       const id = document.getElementById("userid").value.trim();
@@ -183,11 +184,14 @@ let diaryInited = false;
       }
     });
 
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      mainView.style.display  = "none";
-      loginView.style.display = "block";
-    });
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    await signOut(auth);
+    mainView.style.display  = "none";
+    loginView.style.display = "block";
+  });
+}
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
    onAuthStateChanged(auth, (user) => {
@@ -645,3 +649,4 @@ function initDiaryOnce(){
     </script>
 </body>
 </html>
+
