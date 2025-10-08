@@ -179,11 +179,6 @@ let diaryInited = false;
       if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
       const email = `${id}@id.onmaum`;
       try {
-        await signInWithEmailAndPassword(auth, email, pw);
-        // 기존 성공버전: 즉시 화면 전환
-        loginView.style.display = "none";
-        mainView.style.display  = "block";
-        // 로그인 직후 달력 초기화
       } catch (e) {
         alert("로그인 실패: " + e.message);
       }
@@ -740,6 +735,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
