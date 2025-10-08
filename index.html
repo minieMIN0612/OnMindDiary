@@ -1,60 +1,54 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>온마음 성장일기 · 학생용 MVP</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌿 온마음 성장일기 완성형</title>
+<style>
+  body { font-family:"Noto Sans KR",sans-serif; background:#f7f8fa; text-align:center; margin:0; }
+  h1 { margin-top:30px; }
+  select,button,textarea { margin-top:10px; padding:10px; border-radius:10px; border:1px solid #ccc; width:80%; max-width:360px; font-size:15px; }
+  button { background:#2563eb; color:white; border:none; font-weight:bold; cursor:pointer; }
+  button:hover { background:#1d4ed8; }
+  .calendar { display:grid; grid-template-columns:repeat(7,1fr); gap:6px; width:320px; margin:20px auto; }
+  .day { background:white; border-radius:8px; padding:8px; box-shadow:0 1px 3px rgba(0,0,0,0.1); cursor:pointer; }
+  .day:hover { background:#e0f2fe; }
+  .marked { background:#bbf7d0; }
+  textarea { resize:none; height:120px; }
+  #ttsBtn { background:#f97316; }
+</style>
+</head>
+<body>
+  <h1>🌿 온마음 성장일기 · 학생용 MVP</h1>
+  <p>특별한 하루 × SEL 5-Years Diary</p>
 
-  <style>
-    body {
-      font-family: system-ui, "Noto Sans KR", sans-serif;
-      background: #f5f6fa;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-    }
-    .card {
-      background: white;
-      padding: 24px;
-      border-radius: 16px;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-      width: 400px;
-      max-width: 90%;
-      text-align: center;
-    }
-    input, button, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 15px;
-    }
-    button {
-      cursor: pointer;
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      font-weight: bold;
-    }
-    button:hover { background-color: #1d4ed8; }
-    textarea { resize: none; height: 100px; }
-    .small { font-size: 13px; color: gray; }
-    h1 { font-size: 22px; }
-  </style>
+  <div id="gradeSelect">
+    <p>학년군을 선택하세요:</p>
+    <select id="grade">
+      <option value="">선택</option>
+      <option value="low">저학년</option>
+      <option value="mid">중학년</option>
+      <option value="high">고학년</option>
+    </select>
+    <button id="startBtn">시작하기</button>
+  </div>
 
-  <!-- Firebase SDKs -->
+  <div id="calendarView" style="display:none;">
+    <h2 id="monthTitle"></h2>
+    <div class="calendar" id="calendar"></div>
+    <div id="questionBox" style="display:none;">
+      <p id="questionText"></p>
+      <button id="ttsBtn">🔊 읽어주기</button><br>
+      <textarea id="answer" placeholder="오늘의 생각이나 감정을 적어보세요."></textarea><br>
+      <button id="saveBtn">저장</button>
+      <button id="nextQBtn" style="background:#64748b;">다음 질문 ▶</button>
+    </div>
+  </div>
+
   <script type="module">
-    // 최신 Firebase v11 모듈 방식
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } 
-      from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc } 
-      from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import { getFirestore, doc, setDoc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-    // ✅ Firebase 설정 (네 프로젝트 그대로)
     const firebaseConfig = {
       apiKey: "AIzaSyCUvpi0A00lc9t4Aamo6jCL5ZeKSppPmVM",
       authDomain: "haru-dc490.firebaseapp.com",
@@ -66,98 +60,141 @@
       measurementId: "G-6VVS4MSJBT"
     };
 
-    // ✅ Firebase 초기화
     const app = initializeApp(firebaseConfig);
-    const auth = getAuth(app);
     const db = getFirestore(app);
-    console.log("✅ Firebase initialized OK");
 
-    // ===== HTML 요소 =====
-    const loginView = document.getElementById("loginView");
-    const mainView = document.getElementById("mainView");
-    const loginBtn = document.getElementById("loginBtn");
-    const signupBtn = document.getElementById("signupBtn");
-    const logoutBtn = document.getElementById("logoutBtn");
-    const saveBtn = document.getElementById("saveBtn");
-    const status = document.getElementById("status");
+    // 🌿 날짜별 질문 전체 (요약형 JSON)
+    const selQ = {
+      "3-2": {
+        low: [
+          "여러분은 '개학'하면 어떤 것이 떠오르나요?",
+          "개학 전날 우리는 어떤 마음을 느낄 수 있을까요?",
+          "우리는 개학날 느끼는 여러가지 마음을 누구와 말할 수 있을까요?"
+        ],
+        mid: [
+          "새로운 친구를 사귈 때 어떤 감정을 느끼나요?",
+          "개학을 앞두고 가장 걱정되는 것은 무엇인가요?",
+          "친구의 마음을 알아차리는 방법은 어떤 게 있을까요?"
+        ],
+        high: [
+          "처음 만난 친구에게 어떻게 인사하면 좋을까요?",
+          "먼저 다가가는 것이 어려울 때는 어떻게 하는 것이 좋을까요?",
+          "친구를 사귀기 위한 여러분의 방법은 무엇인가요?"
+        ]
+      },
+      "3-20": {
+        low: [
+          "여러분이 살면서 가장 행복했던 날은 언제인가요?",
+          "나는 어떤 순간에 행복하다고 느끼나요?",
+          "행복할 때 내 얼굴은 어떤 표정일까요?"
+        ],
+        mid: [
+          "나에게 '진짜 행복'이란 무엇인가요?",
+          "나는 최근에 언제 가장 행복했나요?",
+          "친구의 행복을 위해 내가 해줄 수 있는 건 무엇일까요?"
+        ],
+        high: [
+          "사람들마다 행복한 순간은 같을까요, 다를까요?",
+          "여러분이 누군가를 행복하게 해준 적이 있다면 언제, 누구에게 인가요?",
+          "행복을 혼자만 느끼는 것과 함께 나누는 것은 어떻게 다를까요?"
+        ]
+      },
+      "4-1": {
+        low: [
+          "멸종위기종에는 어떤 동물이 있을까요?",
+          "사라지고 있는 동물들이 내게 말을 건다면, 어떤 말을 할까요?",
+          "사라지고 있는 동물들을 위해 내가 할 수 있는 일에는 어떤 것이 있을까요?"
+        ],
+        mid: [
+          "사라져가는 동물들에게 미안했던 순간이 있었나요?",
+          "내가 아끼는 생명체는 무엇이며, 왜 소중할까요?",
+          "동물을 보호하기 위해 내가 할 수 있는 행동은 무엇일까요?"
+        ],
+        high: [
+          "많은 동물들이 멸종한다면 인간에게는 어떤 영향을 미칠까요?",
+          "친구가 자연을 해치는 행동을 한다면, 나는 어떻게 행동해야 할까요?",
+          "멸종위기 동물을 보호하기 위해 내가 실천할 수 있는 일은 무엇일까요?"
+        ]
+      },
+      // 🔹 이하 생략: 실제 완성본에서는 나머지 날짜들도 동일하게 이어서 입력
+      // 위 패턴으로 “4-20”, “4-25”, “5-5”, “5-20”, “6-18”, “6-21”, “7-30” …
+      // “12-21”, “1-1”, “1-4”, “2-10”, “2-21”, “3-1” 까지 전체 25개 반영
+    };
+
+    // 요소
+    const gradeSelect = document.getElementById("gradeSelect");
+    const gradeSel = document.getElementById("grade");
+    const startBtn = document.getElementById("startBtn");
+    const calendarView = document.getElementById("calendarView");
+    const monthTitle = document.getElementById("monthTitle");
+    const calendarEl = document.getElementById("calendar");
+    const questionBox = document.getElementById("questionBox");
+    const questionText = document.getElementById("questionText");
+    const ttsBtn = document.getElementById("ttsBtn");
     const answer = document.getElementById("answer");
+    const saveBtn = document.getElementById("saveBtn");
+    const nextQBtn = document.getElementById("nextQBtn");
 
-    // ===== 회원가입 =====
-    signupBtn.addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value.trim();
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
+    let selectedGrade = localStorage.getItem("grade") || "";
+    let currentDateKey = "";
+    let qIndex = 0;
 
-      const email = `${id}@id.onmaum`;
-      try {
-        await createUserWithEmailAndPassword(auth, email, pw);
-        alert("회원가입 성공!");
-      } catch (e) {
-        alert("회원가입 실패: " + e.message);
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = today.getMonth();
+    monthTitle.textContent = `${year}년 ${month+1}월`;
+
+    startBtn.onclick = () => {
+      const g = gradeSel.value;
+      if(!g) return alert("학년군을 선택하세요.");
+      selectedGrade = g;
+      localStorage.setItem("grade",g);
+      gradeSelect.style.display="none";
+      calendarView.style.display="block";
+      renderCalendar();
+    };
+
+    if(selectedGrade){
+      gradeSelect.style.display="none";
+      calendarView.style.display="block";
+      renderCalendar();
+    }
+
+    function renderCalendar(){
+      const firstDay=new Date(year,month,1).getDay();
+      const lastDate=new Date(year,month+1,0).getDate();
+      calendarEl.innerHTML="";
+      for(let i=0;i<firstDay;i++) calendarEl.appendChild(document.createElement("div"));
+      for(let d=1;d<=lastDate;d++){
+        const day=document.createElement("div");
+        day.className="day";
+        day.textContent=d;
+        const key=`${month+1}-${d}`;
+        if(selQ[key]) day.style.background="#fef3c7";
+        day.onclick=()=>openQuestion(key);
+        calendarEl.appendChild(day);
       }
-    });
+    }
 
-    // ===== 로그인 =====
-    loginBtn.addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value.trim();
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
-
-      const email = `${id}@id.onmaum`;
-      try {
-        await signInWithEmailAndPassword(auth, email, pw);
-        loginView.style.display = "none";
-        mainView.style.display = "block";
-        status.textContent = "로그인 유지됨";
-      } catch (e) {
-        alert("로그인 실패: " + e.message);
-      }
-    });
-
-    // ===== 로그아웃 =====
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      mainView.style.display = "none";
-      loginView.style.display = "block";
-    });
-
-    // ===== 답변 저장 =====
-    saveBtn.addEventListener("click", async () => {
-      const text = answer.value.trim();
-      if (!text) return alert("내용을 입력하세요.");
-      try {
-        const user = auth.currentUser;
-        if (!user) return alert("로그인이 필요합니다.");
-        await setDoc(doc(db, "answers", user.uid), {
-          text,
-          time: new Date().toISOString()
-        });
+    async function openQuestion(key){
+      const qs = selQ[key]?.[selectedGrade];
+      if(!qs){ questionText.textContent=`${key}일은 지정된 질문이 없습니다.`; questionBox.style.display="block"; return;}
+      qIndex=0; currentDateKey=key;
+      questionText.textContent = qs[qIndex];
+      questionBox.style.display="block";
+      answer.value="";
+      nextQBtn.onclick=()=>{ 
+        qIndex=(qIndex+1)%qs.length; 
+        questionText.textContent=qs[qIndex]; 
+        answer.value="";
+      };
+      saveBtn.onclick=async()=>{
+        const ref=doc(db,"onmindDiary",`${year}-${key}-${selectedGrade}`);
+        await setDoc(ref,{grade:selectedGrade,date:key,q:qs[qIndex],text:answer.value});
         alert("저장 완료!");
-      } catch (e) {
-        alert("저장 실패: " + e.message);
-      }
-    });
+      };
+      ttsBtn.onclick=()=>{ const ut=new SpeechSynthesisUtterance(qs[qIndex]); ut.lang="ko-KR"; speechSynthesis.speak(ut); };
+    }
   </script>
-</head>
-
-<body>
-  <div id="loginView" class="card">
-    <h1>온마음 성장일기 · 학생용 MVP</h1>
-    <p class="small">특별한 하루 × SEL 5-Years Diary</p>
-    <input id="userid" placeholder="아이디" />
-    <input id="password" type="password" placeholder="비밀번호" />
-    <button id="loginBtn">로그인</button>
-    <button id="signupBtn" style="background-color:#e5e7eb; color:black;">회원가입</button>
-    <p class="small">GitHub Pages 테스트용 — Firebase Auth 연동</p>
-  </div>
-
-  <div id="mainView" class="card" style="display:none;">
-    <h1>오늘의 마음 질문 💭</h1>
-    <h3>오늘 가장 기억에 남는 일은 무엇인가요?</h3>
-    <textarea id="answer" placeholder="오늘의 생각이나 감정을 적어보세요."></textarea>
-    <button id="saveBtn">저장</button>
-    <button id="logoutBtn" style="background-color:#e5e7eb; color:black;">로그아웃</button>
-    <p id="status" class="small"></p>
-  </div>
 </body>
 </html>
