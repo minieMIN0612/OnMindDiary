@@ -121,9 +121,6 @@
         <!-- 🔹 로그아웃 버튼 추가 (맨 위 우측 정렬) -->
     <!-- (성공버전의 간단 입력란: 원형 유지) -->
         <!-- ↓↓↓ 여기 아래로 ‘온마음 성장일기’ UI가 동적으로 추가됨 (buildDiaryUI) ↓↓↓ -->
-        <div class="row" style="justify-content:flex-end;">
-         <button id="logoutBtn" class="secondary">로그아웃</button>
-    </div>
   </div>
 
   <!-- 기존 성공버전의 “간단 저장” 로직은 상단 script에 그대로 있음 -->
@@ -291,9 +288,16 @@ function initDiaryOnce(){
         <div class="divider"></div>
 
         <div class="qa" id="qaArea"></div>
-        <div class="row" style="justify-content:flex-end;">
-          <button id="saveDayBtn">이 날짜의 답변 저장</button>
-        </div>
+       <div class="row" style="justify-content:flex-end;">
+  <button id="saveDayBtn">이 날짜의 답변 저장</button>
+</div>
+
+<div class="divider"></div>
+
+<div class="row" style="justify-content:flex-end;">
+  <button id="logoutBtn" class="secondary">로그아웃</button>
+</div>
+
       `;
       document.getElementById('mainView').appendChild(container);
     }
@@ -677,5 +681,6 @@ qs.forEach((q, idx) => {
     </script>
 </body>
 </html>
+
 
 
