@@ -232,15 +232,18 @@ function initDiaryOnce() {
 
 
     /* ---------- (1) 메인화면에 UI 삽입 ---------- */
-    function buildDiaryUI(){
-      // 기존 simple 입력 영역 아래에 “온마음 성장일기” 영역을 추가
-       const old = document.getElementById("diaryContainer"); if (old) old.remove();
-      const container = document.createElement('div');
-      container.id = "diaryContainer";
-      container.className = 'stack';
-      container.innerHTML = `
-        <div class="divider"></div>
-        <h2>온마음 성장일기</h2>
+function buildDiaryUI() {
+  // ✅ 중복 생성을 방지 (기존 diaryContainer가 있으면 삭제)
+  const old = document.getElementById("diaryContainer");
+  if (old) old.remove();
+
+  // ✅ diaryContainer 새로 생성
+  const container = document.createElement("div");
+  container.id = "diaryContainer";  // id 지정으로 중복 방지
+  container.className = "stack";
+  container.innerHTML = `
+    <div class="divider"></div>
+    <h2>온마음 성장일기</h2>
         <div class="row">
           <div class="col">
             <label class="small">학년 선택</label>
@@ -739,3 +742,4 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
