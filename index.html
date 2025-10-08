@@ -74,6 +74,10 @@
     }
     .day.inactive{ opacity:.4; }
     .day.today{ outline:2px solid var(--accent); }
+    .day.selected {
+  background: #ffe6f1;
+  border-color: #f9a8d4;
+}
     .num{ font-size:12px; color:#475569; }
     .day.special::after{ content:"★"; position:absolute; left:6px; top:6px; font-size:12px; color:#f59e0b; }
     .tag{
@@ -115,11 +119,11 @@
   <!-- 메인 화면 (성공버전의 영역 + 아래에 일기 기능 추가) -->
   <div id="mainView" class="card stack" style="display:none;">
         <!-- 🔹 로그아웃 버튼 추가 (맨 위 우측 정렬) -->
-    <div class="row" style="justify-content:flex-end;">
-      <button id="logoutBtn" class="secondary">로그아웃</button>
-    </div>
     <!-- (성공버전의 간단 입력란: 원형 유지) -->
         <!-- ↓↓↓ 여기 아래로 ‘온마음 성장일기’ UI가 동적으로 추가됨 (buildDiaryUI) ↓↓↓ -->
+        <div class="row" style="justify-content:flex-end;">
+         <button id="logoutBtn" class="secondary">로그아웃</button>
+    </div>
   </div>
 
   <!-- 기존 성공버전의 “간단 저장” 로직은 상단 script에 그대로 있음 -->
@@ -550,7 +554,7 @@ function initDiaryOnce(){
         `;
 
         if(dateObj){
-          cell.addEventListener('click', ()=> selectDate(solarKey, qKey, dateObj));
+           cell.addEventListener('click', (e)=> selectDate(solarKey, qKey, dateObj, e.currentTarget));
         }
         calGrid.appendChild(cell);
       }
@@ -560,10 +564,19 @@ function initDiaryOnce(){
       if(viewYear!==today.getFullYear() || viewMonth!==today.getMonth()) return;
       const key = `${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`;
       const qKey = QUESTIONS[key] ? key : (currentLunarMap[key]||null);
-      if(qKey) selectDate(key, qKey, today);
+      if(qKey){
+  // 오늘 날짜 버튼을 화면에서 찾아서 cellEl로 넘겨줌
+  const cell = Array.from(document.querySelectorAll('.day')).find(
+    c => c.textContent.includes(String(today.getDate()))
+  );
+  selectDate(key, qKey, today, cell);
+}
     }
 
-    function selectDate(solarKey, qKey, dateObj){
+      // 선택 강조 효과
+function selectDate(solarKey, qKey, dateObj, cellEl){
+  document.querySelectorAll('.day').forEach(d => d.classList.remove('selected'));
+  cellEl?.classList.add('selected');
       currentSolarKey = solarKey;
       currentDayKey   = qKey; // QUESTIONS의 key (양력 or L-)
       if(!qKey){
@@ -593,28 +606,43 @@ function initDiaryOnce(){
 
       const qs = QUESTIONS[currentDayKey].questions[bandKey]; // 3문항
       qaArea.innerHTML = '';
-      const prevYear = viewYear-1;
       const user = auth.currentUser;
-      let prev = null;
-      if(user){
-        const prevId = `${user.uid}__${prevYear}__${currentDayKey}`;
-        const prevDoc = await getDoc(doc(db, 'entries', prevId));
-        prev = prevDoc.exists() ? prevDoc.data() : null;
-      }
-
-      qs.forEach((q, idx)=>{
-        const wrap = document.createElement('div');
-        wrap.className = 'stack';
-        const prevText = prev?.answers?.[idx] || '';
-        wrap.innerHTML = `
-          <p class="q">Q${idx+1}. ${q}</p>
-          ${prevText ? `<div class="prevLabel">작년(${prevYear})의 나</div><textarea class="prevAns" rows="3" readonly>${prevText}</textarea>`:''}
-          <textarea rows="4" data-idx="${idx}" placeholder="여기에 내 답을 적어요"></textarea>
-        `;
-        qaArea.appendChild(wrap);
-      });
+let allPrev = [];
+if (user) {
+  // 🔹 현재 연도보다 과거의 모든 연도 문서 가져오기 (5년 전까지 예시)
+  for (let y = viewYear - 5; y < viewYear; y++) {
+    const prevId = `${user.uid}__${y}__${currentDayKey}`;
+    const prevDoc = await getDoc(doc(db, 'entries', prevId));
+    if (prevDoc.exists()) {
+      allPrev.push({ year: y, data: prevDoc.data() });
     }
+  }
+}
 
+qs.forEach((q, idx) => {
+  const wrap = document.createElement('div');
+  wrap.className = 'stack';
+
+  // 🔹 과거 답변 모두 누적 표시
+  let prevHTML = "";
+  allPrev.forEach(p => {
+    const prevText = p.data.answers?.[idx] || "";
+    if (prevText) {
+      prevHTML += `
+        <div class="prevLabel">${p.year}년의 나</div>
+        <textarea class="prevAns" rows="3" readonly>${prevText}</textarea>
+      `;
+    }
+  });
+
+  wrap.innerHTML = `
+    <p class="q">Q${idx + 1}. ${q}</p>
+    ${prevHTML}
+    <textarea rows="4" data-idx="${idx}" placeholder="여기에 내 답을 적어요"></textarea>
+  `;
+  qaArea.appendChild(wrap);
+});
+    }
     async function saveCurrentDay(){
       const user = auth.currentUser;
       if(!user) return alert('로그인이 필요합니다.');
@@ -649,4 +677,5 @@ function initDiaryOnce(){
     </script>
 </body>
 </html>
+
 
