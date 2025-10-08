@@ -177,14 +177,25 @@ let diaryInited = false;
 });
 
     // ====== 여기부터: 로그인 후 메인 화면에만 '달력+질문' 추가 ======
-    function initDiaryOnce(){
-      if (diaryInited) return;
-      diaryInited = true;
-      buildDiaryUI();      // DOM 붙이기
-      wireDiaryLogic();    // 이벤트/저장/불러오기
-      renderCalendar();    // 초깃값 렌더
+function initDiaryOnce(){
+  if (diaryInited) return;
+  diaryInited = true;
+
+  buildDiaryUI();
+  wireDiaryLogic();    
+
+  // yearPicker 등 DOM이 완전히 붙을 때까지 안전 대기
+  const safeInit = () => {
+    if (document.getElementById("yearPicker")) {
+      renderCalendar();
       autoSelectTodayIfSpecial();
+    } else {
+      console.warn("⏳ yearPicker 아직 준비 안됨 — 100ms 후 재시도");
+      setTimeout(safeInit, 100);
     }
+  };
+  safeInit();
+}
 
     /* ---------- (1) 메인화면에 UI 삽입 ---------- */
     function buildDiaryUI(){
@@ -628,6 +639,7 @@ let diaryInited = false;
   <!-- 기존 성공버전의 “간단 저장” 로직은 상단 script에 그대로 있음 -->
 </body>
 </html>
+
 
 
 
