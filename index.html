@@ -52,23 +52,34 @@
     .prevLabel{ font-size:12px; color:#475569; }
     .prevAns{ background:#f8fafc; border-color:#e2e8f0; }
   </style>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
 
-<script>
-  const firebaseConfig = {
-    apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
-    authDomain: "haru-dc490.firebaseapp.com",
-    databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "haru-dc490",
-    storageBucket: "haru-dc490.appspot.com",
-    messagingSenderId: "1062975092523",
-    appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
-    measurementId: "G-6VVS4MSJBT"
-  };
-  firebase.initializeApp(firebaseConfig);
-</script>
+  <!-- Firebase compat SDKs (v9) -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase 초기화 (head 안, compat SDK 아래) -->
+  <script>
+    (function(){
+      const firebaseConfig = {
+        apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
+        authDomain: "haru-dc490.firebaseapp.com",
+        databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "haru-dc490",
+        storageBucket: "haru-dc490.appspot.com",
+        messagingSenderId: "1062975092523",
+        appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
+        measurementId: "G-6VVS4MSJBT"
+      };
+      // 초기화
+      firebase.initializeApp(firebaseConfig);
+      // 전역에 auth, db 노출 (module 스크립트에서 사용)
+      window.auth = firebase.auth();
+      window.db   = firebase.firestore();
+      // 디버그용
+      // console.log('firebase apps:', firebase.apps.length);
+    })();
+  </script>
 </head>
 <body>
   <header>
@@ -150,56 +161,41 @@
     </div>
   </section>
 
+  <!-- 앱 로직 -->
   <script type="module">
     // ===== 유틸 =====
     const $=(id)=>document.getElementById(id);
-    
-  // ===== Firebase 설정 =====
-    const firebaseConfig = {
-      // --- Firebase init (config 선언 바로 아래에 위치해야 함) ---
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
-const db   = firebase.firestore();
-    apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
-    authDomain: "haru-dc490.firebaseapp.com",
-    databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
-    projectId: "haru-dc490",
-    storageBucket: "haru-dc490.appspot.com",
-    messagingSenderId: "1062975092523",
-    appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
-    measurementId: "G-6VVS4MSJBT"
-  };
 
-// ===== Firebase 기반 계정 관리 =====
+    // ===== Firebase 핸들 (head에서 초기화해 둠) =====
+    const auth = window.auth;
+    const db   = window.db;
 
-// uid를 가짜 이메일로 변환
-const emailFromUserId = (userid) => `${userid}@id.onmaum`;
+    // ===== Firebase 기반 계정 관리 =====
+    const emailFromUserId = (userid) => `${userid}@id.onmaum`;
 
-// 회원가입
-async function createAccount(uid, pw) {
-  try {
-    const email = emailFromUserId(uid);
-    const userCredential = await auth.createUserWithEmailAndPassword(email, pw);
-    console.log("회원가입 성공:", userCredential.user);
-    return userCredential.user.uid;
-  } catch (error) {
-    alert("회원가입 실패: " + error.message);
-    return null;
-  }
-}
+    async function createAccount(uid, pw) {
+      try {
+        const email = emailFromUserId(uid);
+        const userCredential = await auth.createUserWithEmailAndPassword(email, pw);
+        console.log("회원가입 성공:", userCredential.user);
+        return userCredential.user.uid;
+      } catch (error) {
+        alert("회원가입 실패: " + error.message);
+        return null;
+      }
+    }
 
-// 로그인
-async function verifyAccount(uid, pw) {
-  try {
-    const email = emailFromUserId(uid);
-    const userCredential = await auth.signInWithEmailAndPassword(email, pw);
-    console.log("로그인 성공:", userCredential.user);
-    return userCredential.user.uid;
-  } catch (error) {
-    alert("로그인 실패: " + error.message);
-    return null;
-  }
-}
+    async function verifyAccount(uid, pw) {
+      try {
+        const email = emailFromUserId(uid);
+        const userCredential = await auth.signInWithEmailAndPassword(email, pw);
+        console.log("로그인 성공:", userCredential.user);
+        return userCredential.user.uid;
+      } catch (error) {
+        alert("로그인 실패: " + error.message);
+        return null;
+      }
+    }
 
     // ===== 세션 / 화면 전환 =====
     let session={ uid:null, studentId:null };
@@ -214,38 +210,38 @@ async function verifyAccount(uid, pw) {
     const btnLogout=$('btnLogout');
     function syncAuthUI(){ const logged=!!session.studentId; authView.style.display= logged? 'none':'block'; mainView.style.display= logged? 'block':'none'; updateSaveState(); }
 
-  btnSignup.addEventListener('click', async () => {
-  const uid = uidEl.value.trim();
-  const pw = pwEl.value;
-  if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
-  try {
-    const sid = await createAccount(uid, pw);
-    if(!sid) return alert('회원가입 실패');
-    setSession(sid, uid);
-    alert('회원가입 성공!');
-  } catch(e){
-    alert('회원가입 오류: ' + e.message);
-  }
-});
+    btnSignup.addEventListener('click', async () => {
+      const uid = uidEl.value.trim();
+      const pw = pwEl.value;
+      if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
+      try {
+        const sid = await createAccount(uid, pw);
+        if(!sid) return alert('회원가입 실패');
+        setSession(sid, uid);
+        alert('회원가입 성공!');
+      } catch(e){
+        alert('회원가입 오류: ' + e.message);
+      }
+    });
 
-btnLogin.addEventListener('click', async () => {
-  const uid = uidEl.value.trim();
-  const pw = pwEl.value;
-  if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
-  try {
-    const sid = await verifyAccount(uid, pw);
-    if(!sid) return alert('로그인 실패');
-    setSession(sid, uid);
-    alert('로그인 성공!');
-  } catch(e){
-    alert('로그인 오류: ' + e.message);
-  }
-});
+    btnLogin.addEventListener('click', async () => {
+      const uid = uidEl.value.trim();
+      const pw = pwEl.value;
+      if(!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
+      try {
+        const sid = await verifyAccount(uid, pw);
+        if(!sid) return alert('로그인 실패');
+        setSession(sid, uid);
+        alert('로그인 성공!');
+      } catch(e){
+        alert('로그인 오류: ' + e.message);
+      }
+    });
 
-btnLogout.addEventListener('click', () => {
-  clearSession();
-  alert('로그아웃 되었습니다.');
-});
+    btnLogout.addEventListener('click', () => {
+      clearSession();
+      alert('로그아웃 되었습니다.');
+    });
 
     // ===== 질문 데이터(전량) =====
     const QUESTIONS={
@@ -395,7 +391,7 @@ btnLogout.addEventListener('click', () => {
         const qKey= solarKey? (QUESTIONS[solarKey]? solarKey: (currentLunarMap[solarKey]||null)) : null;
         if(inactive) cell.classList.add('inactive'); if(isToday) cell.classList.add('today'); if(qKey) cell.classList.add('special');
         let label=null, titleAttr=null; if(qKey){ const t=QUESTIONS[qKey]?.title||''; const name=t.includes('·')? t.split('·')[1].trim(): t.trim(); label=name; titleAttr=qKey.startsWith('L-')? `${t} (양력 ${solarKey})`: t; }
-        cell.innerHTML=`<div class="num">${numLabel||''}</div>${label?`<div class=\"tag\">${label}</div>`:''}`;
+        cell.innerHTML=`<div class="num">${numLabel||''}</div>${label?`<div class="tag">${label}</div>`:''}`;
         if(titleAttr) cell.title=titleAttr;
         if(dateObj){ cell.addEventListener('click', ()=> selectDate(solarKey,dateObj)); }
         calGrid.appendChild(cell);
@@ -426,7 +422,7 @@ btnLogout.addEventListener('click', () => {
       currentQuestionKey=qKey;
       if(qKey){
         const meta=QUESTIONS[qKey];
-        dayTitle.textContent= meta.title + (qKey.startsWith('L-')? ` (양력 ${solarKey})`:'');
+        dayTitle.textContent= meta.title + (qKey.startsWith('L-')? ` (양력 ${solarKey})`:``);
         dayKeyHint.textContent= qKey.startsWith('L-')? `음력 ${qKey.slice(2)} → 양력 ${solarKey}`: `양력 ${solarKey} · 학년군별 3문항`;
         renderQuestions();
       }else{
@@ -463,20 +459,8 @@ btnLogout.addEventListener('click', () => {
     // 초기
     loadSession(); renderCalendar(); autoSelectTodayIfSpecial(); updateSaveState();
 
-    // 스모크 테스트
+    // 스모크 테스트 (콘솔에서 확인)
     (function(){ const tests=[]; const ok=(n,c)=>tests.push({name:n,pass:!!c}); ok('QUESTIONS keys', Object.keys(QUESTIONS).length>=20); ok('달력 셀', document.getElementById('calGrid').children.length>0); console.table(tests); })();
-  </script>    
+  </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
