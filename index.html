@@ -192,29 +192,27 @@ loginBtn.addEventListener("click", async () => {
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
 onAuthStateChanged(auth, (user) => {
   if (user) {
-    // 🔹 약간의 지연으로 중복 실행 완벽 방지
     setTimeout(() => {
-      if (diaryInited) return; // ✅ 이미 렌더된 경우 재실행 방지
-      diaryInited = true;      // ✅ 여기서 바로 true 처리
+      if (diaryInited) return; // ✅ 이 한 줄만 남기고
       loginView.style.display = "none";
       mainView.style.display  = "block";
-      initDiaryOnce();         // 로그인 유지 시 달력 다시 렌더링
-    }, 300); // 0.3초 지연
+      initDiaryOnce(); // 여기서 diaryInited를 처리하도록 넘겨줍니다
+    }, 300);
   } else {
     mainView.style.display  = "none";
     loginView.style.display = "block";
   }
 });
 
+
     // ====== 여기부터: 로그인 후 메인 화면에만 '달력+질문' 추가 ======
-function initDiaryOnce(){
+function initDiaryOnce() {
   if (diaryInited) return;
-  diaryInited = true;
+  diaryInited = true; // ✅ 실제 실행 위치는 여기 하나만 유지
 
   buildDiaryUI();
   wireDiaryLogic();
 
-  // 💡 yearPicker가 완전히 DOM에 붙을 때까지 반복 확인
   let checkCount = 0;
   const waitForPicker = setInterval(() => {
     const picker = document.getElementById("yearPicker");
@@ -224,14 +222,14 @@ function initDiaryOnce(){
       renderCalendar();
       autoSelectTodayIfSpecial();
     } else {
-      checkCount++;
-      if (checkCount > 30) {
+      if (++checkCount > 30) {
         clearInterval(waitForPicker);
         console.error("⚠️ yearPicker 찾기 실패 — buildDiaryUI 실행 확인 필요");
       }
     }
   }, 100);
 }
+
 
     /* ---------- (1) 메인화면에 UI 삽입 ---------- */
     function buildDiaryUI(){
@@ -739,6 +737,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
