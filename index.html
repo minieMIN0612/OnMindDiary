@@ -234,7 +234,9 @@ function initDiaryOnce() {
     /* ---------- (1) 메인화면에 UI 삽입 ---------- */
     function buildDiaryUI(){
       // 기존 simple 입력 영역 아래에 “온마음 성장일기” 영역을 추가
+       const old = document.getElementById("diaryContainer"); if (old) old.remove();
       const container = document.createElement('div');
+      container.id = "diaryContainer";
       container.className = 'stack';
       container.innerHTML = `
         <div class="divider"></div>
@@ -737,19 +739,3 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
