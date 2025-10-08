@@ -301,17 +301,6 @@ function initDiaryOnce(){
       `;
       document.getElementById('mainView').appendChild(container);
     }
-// 🔹 로그아웃 버튼 기능 연결 (buildDiaryUI 실행 후)
-setTimeout(() => {
-  const logoutBtn = document.getElementById("logoutBtn");
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", async () => {
-      await signOut(auth);
-      mainView.style.display  = "none";
-      loginView.style.display = "block";
-    });
-  }
-}, 300);
     /* ---------- (2) 질문 데이터 (25일 × 3학년군 = 75문항) ---------- */
     const QUESTIONS={
       '03-02':{title:'3월 2일 · 개학',lunar:false,questions:{
@@ -504,6 +493,22 @@ setTimeout(() => {
       });
 
       saveDayBtn.addEventListener('click', saveCurrentDay);
+      // 🔹 로그아웃 버튼 기능 연결
+const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", async () => {
+    try {
+      await signOut(auth);
+      diaryInited = false;
+      mainView.style.display = "none";
+      loginView.style.display = "block";
+      console.log("✅ 로그아웃 성공");
+    } catch (e) {
+      console.error("로그아웃 실패:", e);
+      alert("로그아웃 실패: " + e.message);
+    }
+  });
+}
     }
 
     function initPickers(){
@@ -726,6 +731,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
