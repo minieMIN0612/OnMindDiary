@@ -655,30 +655,41 @@ qs.forEach((q, idx) => {
   // 🔹 과거 답변 모두 누적 표시
   let prevHTML = "";
   allPrev.forEach(p => {
-  const prevText = p.data.answers?.[idx] || "";
-  const prevBand = p.data.band || "";  // 저장된 학년군
-  let prevQuestion = "";
+    const prevText = p.data.answers?.[idx] || "";
+    const prevBand = p.data.band || "";  // 저장된 학년군
+    let prevQuestion = "";
 
-  // 🔹 그 해의 학년군과 질문키로 원래 질문을 찾아줌
-  if (QUESTIONS[p.data.dayKey]?.questions?.[prevBand]?.[idx]) {
-    prevQuestion = QUESTIONS[p.data.dayKey].questions[prevBand][idx];
-  }
+    // 🔹 그 해의 학년군과 질문키로 원래 질문을 찾아줌
+    if (QUESTIONS[p.data.dayKey]?.questions?.[prevBand]?.[idx]) {
+      prevQuestion = QUESTIONS[p.data.dayKey].questions[prevBand][idx];
+    }
 
-  if (prevText) {
-    prevHTML += `
-      <div class="prevLabel">${p.year}년의 나 (${bandName(prevBand)})</div>
-      ${prevQuestion ? `<div class="small" style="margin-bottom:4px;">Q${idx + 1}. ${prevQuestion}</div>` : ""}
-      <textarea class="prevAns" rows="3" readonly>${prevText}</textarea>
-    `;
-  }
+    if (prevText) {
+      prevHTML += `
+        <div class="prevLabel">${p.year}년의 나 (${bandName(prevBand)})</div>
+        ${prevQuestion ? `<div class="small" style="margin-bottom:4px;">Q${idx + 1}. ${prevQuestion}</div>` : ""}
+        <textarea class="prevAns" readonly>${prevText}</textarea>
+      `;
+    }
+  });
+
+  // 🔹 새 질문 및 답변칸 (항상 맨 아래에)
+  const currentHTML = `
+    <p class="q">Q${idx + 1}. ${q}</p>
+    <textarea data-idx="${idx}" placeholder="여기에 내 답을 적어요"></textarea>
+  `;
+
+  // 🔹 누적답변이 위로, 올해 질문과 답변은 아래로
+  wrap.innerHTML = prevHTML + currentHTML;
+  qaArea.appendChild(wrap);
 });
 
-  wrap.innerHTML = `
-    <p class="q">Q${idx + 1}. ${q}</p>
-    ${prevHTML}
-    <textarea rows="4" data-idx="${idx}" placeholder="여기에 내 답을 적어요"></textarea>
-  `;
-  qaArea.appendChild(wrap);
+// 🔹 누적답변 textarea 높이 자동 조절
+qaArea.querySelectorAll('.prevAns').forEach(t => {
+  t.style.height = 'auto';
+  t.style.overflow = 'hidden';
+  t.style.minHeight = '24px';
+  t.style.height = t.scrollHeight + 'px';
 });
     }
     async function saveCurrentDay(){
@@ -715,6 +726,7 @@ qs.forEach((q, idx) => {
     </script>
 </body>
 </html>
+
 
 
 
