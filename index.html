@@ -164,9 +164,16 @@
     });
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
-    onAuthStateChanged(auth, (user) => {
-      else { mainView.style.display="none"; loginView.style.display="block"; }
-    });
+   onAuthStateChanged(auth, (user) => {
+  if (user) {
+    loginView.style.display = "none";
+    mainView.style.display  = "block";
+    initDiaryOnce(); // 로그인 유지 시 달력 다시 렌더링
+  } else {
+    mainView.style.display  = "none";
+    loginView.style.display = "block";
+  }
+});
 
     // ====== 여기부터: 로그인 후 메인 화면에만 '달력+질문' 추가 ======
     let diaryInited = false;
@@ -621,6 +628,7 @@
   <!-- 기존 성공버전의 “간단 저장” 로직은 상단 script에 그대로 있음 -->
 </body>
 </html>
+
 
 
 
