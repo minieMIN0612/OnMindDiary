@@ -6,32 +6,32 @@
   <title>온마음 성장일기 · 학생용 MVP</title>
   <style>
     * { box-sizing: border-box; }
-    :root { --bg:#fafafc; --card:#fff; --ink:#111; --muted:#6b7280; --accent:#2563eb; --ring:rgba(37,99,235,.25); --line:#e5e7eb; --warn:#fffbeb; }
-    body{ margin:0; font-family: system-ui, -apple-system, "Noto Sans KR", Segoe UI, Roboto, Helvetica, Arial; background:var(--bg); color:var(--ink); }
-    header{ position:sticky; top:0; z-index:10; background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.85) 60%,transparent); backdrop-filter: blur(8px); }
-    .container{ max-width:1200px; margin:0 auto; padding:16px; }
-    .card{ background:var(--card); border:1px solid var(--line); border-radius:14px; box-shadow:0 2px 10px rgba(0,0,0,.04); }
-    .section{ padding:16px; }
-    .row{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
-    .field{ display:grid; gap:6px; flex:1; min-width:120px; }
-    label{ font-size:12px; color:var(--muted); }
-    input, select, button{ font:inherit; }
-    input, select{ width:100%; padding:10px 12px; border:1px solid var(--line); border-radius:10px; background:#fff; }
-    input:focus, select:focus{ outline:none; border-color:var(--accent); box-shadow:0 0 0 4px var(--ring); }
-    button{ padding:10px 14px; border-radius:10px; border:1px solid #d1d5db; background:#fff; cursor:pointer; }
-    .btn{ background:var(--accent); color:#fff; border-color:var(--accent); }
-    .btn:disabled{ opacity:.6; cursor:not-allowed; }
-    .kicker{ color:var(--muted); font-size:12px; }
+    :root { --bg:#fafafc; --card:#fff; --ink:#111; --muted:#6b7280; --accent:#2563eb; --ring:rgba(37,99,235,.25); --line:#e5e7eb; }
+    body{ margin:0; font-family:system-ui,-apple-system,"Noto Sans KR",Segoe UI,Roboto,Helvetica,Arial; background:var(--bg); color:var(--ink); }
+    header{ position:sticky;top:0;z-index:10;background:linear-gradient(180deg,#fff 0%,rgba(255,255,255,.9) 60%,transparent);backdrop-filter:blur(8px);}
+    .container{max-width:1200px;margin:0 auto;padding:16px;}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:14px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+    .section{padding:16px;}
+    .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;}
+    .field{display:grid;gap:6px;flex:1;min-width:120px;}
+    label{font-size:12px;color:var(--muted);}
+    input,select,textarea,button{font:inherit;}
+    input,select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:#fff;}
+    input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 4px var(--ring);}
+    button{padding:10px 14px;border-radius:10px;border:1px solid #d1d5db;background:#fff;cursor:pointer;}
+    .btn{background:var(--accent);color:#fff;border-color:var(--accent);}
+    .btn:disabled{opacity:.6;cursor:not-allowed;}
+    .kicker{color:var(--muted);font-size:12px;}
+    .divider{height:1px;background:var(--line);margin:12px 0;}
   </style>
 
-  <!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore-compat.js"></script>
+  <!-- ✅ Firebase SDK (모듈 방식) -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import { getFirestore } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
-
-  <script>
-    // Firebase 초기화
+    // 🔹 Firebase 설정
     const firebaseConfig = {
       apiKey: "AIzaSyCUvpi0A0Olc9t4Aamo6jCL5ZeKSppPmVM",
       authDomain: "haru-dc490.firebaseapp.com",
@@ -42,79 +42,113 @@
       appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
       measurementId: "G-6VVS4MSJBT"
     };
-    firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized:", firebase.apps.length);
+
+    // 🔹 초기화
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const db = getFirestore(app);
+    console.log("✅ Firebase initialized:", app.name);
+
+    // 전역 공유
+    window.auth = auth;
+    window.db = db;
   </script>
 </head>
 
 <body>
+  <header>
+    <div class="container">
+      <div class="brand">
+        <h1>온마음 성장일기 · 학생용 MVP</h1>
+        <span class="kicker">특별한 하루 × SEL 5-Years Diary</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- 로그인 화면 -->
   <section id="authView" class="container" style="max-width:560px;">
     <div class="card section">
-      <div class="kicker">계정</div>
+      <div class="kicker">계정 로그인</div>
       <div class="row">
         <div class="field"><label>아이디</label><input id="userid" placeholder="예: s1234"></div>
         <div class="field"><label>비밀번호</label><input id="password" type="password" placeholder="비밀번호"></div>
       </div>
-      <div style="display:flex; gap:8px; margin-top:8px;">
+      <div class="row" style="margin-top:10px;">
         <button id="btnLogin" class="btn">로그인</button>
         <button id="btnSignup">회원가입</button>
       </div>
-      <p class="kicker">Firebase Auth 테스트용</p>
+      <p class="kicker">GitHub Pages 테스트용 — Firebase Auth 연동</p>
     </div>
   </section>
 
+  <!-- 메인 화면 -->
   <section id="mainView" class="container" style="display:none;">
     <div class="card section">
-      <h2>🎉 로그인 성공!</h2>
+      <h3>로그인 성공 🎉</h3>
+      <p>이제 Firebase 연결이 정상 동작합니다!</p>
       <button id="btnLogout" class="btn">로그아웃</button>
     </div>
   </section>
 
+  <!-- 동작 스크립트 -->
   <script>
-    const auth = firebase.auth();
+    const $ = (id) => document.getElementById(id);
+    const authView = $('authView'), mainView = $('mainView');
+    const uidEl = $('userid'), pwEl = $('password');
+    const btnLogin = $('btnLogin'), btnSignup = $('btnSignup'), btnLogout = $('btnLogout');
 
-    function show(view) {
-      document.getElementById("authView").style.display = (view === "auth") ? "block" : "none";
-      document.getElementById("mainView").style.display = (view === "main") ? "block" : "none";
+    // 로그인 상태 관리
+    function syncUI(user) {
+      const loggedIn = !!user;
+      authView.style.display = loggedIn ? 'none' : 'block';
+      mainView.style.display = loggedIn ? 'block' : 'none';
     }
 
     // 회원가입
-    document.getElementById("btnSignup").addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value;
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
+    btnSignup.addEventListener('click', async () => {
+      const uid = uidEl.value.trim(), pw = pwEl.value;
+      if (!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
       try {
-        const email = `${id}@id.onmaum`;
-        await auth.createUserWithEmailAndPassword(email, pw);
-        alert("✅ 회원가입 성공!");
-        show("main");
-      } catch (error) {
-        alert("회원가입 실패: " + error.message);
+        const email = `${uid}@id.onmaum`;
+        const userCredential = await window.auth.createUserWithEmailAndPassword
+          ? window.auth.createUserWithEmailAndPassword(email, pw)
+          : (await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')).createUserWithEmailAndPassword(window.auth, email, pw);
+        alert('회원가입 성공!');
+        syncUI(userCredential.user);
+      } catch (e) {
+        console.error(e);
+        alert('회원가입 실패: ' + e.message);
       }
     });
 
     // 로그인
-    document.getElementById("btnLogin").addEventListener("click", async () => {
-      const id = document.getElementById("userid").value.trim();
-      const pw = document.getElementById("password").value;
-      if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
+    btnLogin.addEventListener('click', async () => {
+      const uid = uidEl.value.trim(), pw = pwEl.value;
+      if (!uid || !pw) return alert('아이디/비밀번호를 입력하세요.');
       try {
-        const email = `${id}@id.onmaum`;
-        await auth.signInWithEmailAndPassword(email, pw);
-        alert("✅ 로그인 성공!");
-        show("main");
-      } catch (error) {
-        alert("로그인 실패: " + error.message);
+        const email = `${uid}@id.onmaum`;
+        const userCredential = await window.auth.signInWithEmailAndPassword
+          ? window.auth.signInWithEmailAndPassword(email, pw)
+          : (await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js')).signInWithEmailAndPassword(window.auth, email, pw);
+        alert('로그인 성공!');
+        syncUI(userCredential.user);
+      } catch (e) {
+        console.error(e);
+        alert('로그인 실패: ' + e.message);
       }
     });
 
     // 로그아웃
-    document.getElementById("btnLogout").addEventListener("click", async () => {
-      await auth.signOut();
-      alert("로그아웃 완료");
-      show("auth");
+    btnLogout.addEventListener('click', async () => {
+      try {
+        const { signOut } = await import('https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js');
+        await signOut(window.auth);
+        alert('로그아웃 완료');
+        syncUI(null);
+      } catch (e) {
+        console.error(e);
+      }
     });
   </script>
 </body>
 </html>
-
