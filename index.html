@@ -184,7 +184,6 @@ let diaryInited = false;
         loginView.style.display = "none";
         mainView.style.display  = "block";
         // 로그인 직후 달력 초기화
-        initDiaryOnce();
       } catch (e) {
         alert("로그인 실패: " + e.message);
       }
@@ -736,6 +735,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
