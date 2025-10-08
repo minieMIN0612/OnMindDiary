@@ -499,15 +499,20 @@ if (logoutBtn) {
   logoutBtn.addEventListener("click", async () => {
     try {
       await signOut(auth);
-      diaryInited = false;
-      mainView.style.display = "none";
-      loginView.style.display = "block";
-      console.log("✅ 로그아웃 성공");
-    } catch (e) {
-      console.error("로그아웃 실패:", e);
-      alert("로그아웃 실패: " + e.message);
-    }
-  });
+ 
+    // ✅ 로그아웃 직후 화면 초기화 추가
+    document.getElementById("userid").value = "";
+    document.getElementById("password").value = "";
+    mainView.style.display = "none";
+    loginView.style.display = "block";
+
+    diaryInited = false;
+    console.log("✅ 로그아웃 성공 및 UI 초기화 완료");
+  } catch (e) {
+    console.error("로그아웃 실패:", e);
+    alert("로그아웃 실패: " + e.message);
+  }
+});
 }
     }
 
@@ -731,6 +736,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
