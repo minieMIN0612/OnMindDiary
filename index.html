@@ -43,8 +43,19 @@
   <!-- ✅ Firebase SDK (모듈 방식 최신버전) -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
-    import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+    import {
+      getAuth,
+      createUserWithEmailAndPassword,
+      signInWithEmailAndPassword,
+      signOut,
+      onAuthStateChanged
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+    import {
+      getFirestore,
+      doc,
+      setDoc,
+      getDoc
+    } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
 
     // 🔹 Firebase 설정
     const firebaseConfig = {
@@ -177,6 +188,9 @@
       syncUI(user);
       if (user) console.log("자동 로그인 유지:", user.email);
     });
+
+    // ✅ 로그인 후 즉시 UI 갱신 강제 (핵심 수정)
+    syncUI(window.auth.currentUser);
   </script>
 </head>
 
