@@ -191,8 +191,9 @@ let diaryInited = false;
 
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
-   onAuthStateChanged(auth, (user) => {
+ onAuthStateChanged(auth, (user) => {
   if (user) {
+    if (diaryInited) return; // ✅ 이미 렌더된 경우 재실행 방지!
     loginView.style.display = "none";
     mainView.style.display  = "block";
     initDiaryOnce(); // 로그인 유지 시 달력 다시 렌더링
@@ -735,6 +736,7 @@ qaArea.querySelectorAll('.prevAns').forEach(t => {
     </script>
 </body>
 </html>
+
 
 
 
