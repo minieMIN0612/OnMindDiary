@@ -89,9 +89,14 @@
     /* 질문 */
     .q { margin:0 0 6px; font-weight:700; }
     .qa { display:grid; gap:12px; }
-    .prevLabel{ font-size:12px; color:#475569; }
-    .prevAns{ background:#f8fafc; border:1px solid #e2e8f0; }
-    .hint { color:#64748b; font-size:12px; }
+.prevLabel{ font-size:12px; color:#475569; }
+.prevAns{
+  background:#f8fafc;
+  border:1px solid #e2e8f0;
+  margin-bottom:6px; /* ← 이 한 줄 추가 */
+}
+.hint { color:#64748b; font-size:12px; }
+
 
     .pill { display:inline-flex; align-items:center; gap:8px; padding:8px 12px; border-radius:999px;
       background:#f1f5f9; border:1px solid #e2e8f0; font-size:13px; }
@@ -237,11 +242,14 @@ function initDiaryOnce(){
           <div class="col">
             <label class="small">학년 선택</label>
             <select id="gradeBand">
-              <option value="">선택하세요</option>
-              <option value="low">1~2학년</option>
-              <option value="mid">3~4학년</option>
-              <option value="high">5~6학년</option>
-            </select>
+  <option value="">학년 선택</option>
+  <option value="1">1학년</option>
+  <option value="2">2학년</option>
+  <option value="3">3학년</option>
+  <option value="4">4학년</option>
+  <option value="5">5학년</option>
+  <option value="6">6학년</option>
+</select>
           </div>
           <div class="col">
             <label class="small">연도</label>
@@ -501,7 +509,7 @@ setTimeout(() => {
     function initPickers(){
       // 년도: 현재 기준 -2 ~ +2
       yearPicker.innerHTML='';
-      for(let y=today.getFullYear()-2; y<=today.getFullYear()+2; y++){
+for(let y=2025; y<=2035; y++){
         const o=document.createElement('option');
         o.value=y; o.textContent=`${y}년`;
         if(y===viewYear) o.selected=true;
@@ -600,10 +608,25 @@ function selectDate(solarKey, qKey, dateObj, cellEl){
       renderQuestions();
     }
 
-    function bandLabelToKey(v){
-      // select value already 'low'|'mid'|'high'
-      return v||'';
-    }
+function bandLabelToKey(v){
+  switch(v){
+    case "1":
+    case "2": return "low";
+    case "3":
+    case "4": return "mid";
+    case "5":
+    case "6": return "high";
+    default: return "";
+  }
+}
+function bandName(key){
+  switch(key){
+    case "low": return "1‧2학년군";
+    case "mid": return "3‧4학년군";
+    case "high": return "5‧6학년군";
+    default: return "";
+  }
+}
 
     async function renderQuestions(){
       const bandKey = bandLabelToKey(bandSelect.value);
@@ -632,14 +655,23 @@ qs.forEach((q, idx) => {
   // 🔹 과거 답변 모두 누적 표시
   let prevHTML = "";
   allPrev.forEach(p => {
-    const prevText = p.data.answers?.[idx] || "";
-    if (prevText) {
-      prevHTML += `
-        <div class="prevLabel">${p.year}년의 나</div>
-        <textarea class="prevAns" rows="3" readonly>${prevText}</textarea>
-      `;
-    }
-  });
+  const prevText = p.data.answers?.[idx] || "";
+  const prevBand = p.data.band || "";  // 저장된 학년군
+  let prevQuestion = "";
+
+  // 🔹 그 해의 학년군과 질문키로 원래 질문을 찾아줌
+  if (QUESTIONS[p.data.dayKey]?.questions?.[prevBand]?.[idx]) {
+    prevQuestion = QUESTIONS[p.data.dayKey].questions[prevBand][idx];
+  }
+
+  if (prevText) {
+    prevHTML += `
+      <div class="prevLabel">${p.year}년의 나 (${bandName(prevBand)})</div>
+      ${prevQuestion ? `<div class="small" style="margin-bottom:4px;">Q${idx + 1}. ${prevQuestion}</div>` : ""}
+      <textarea class="prevAns" rows="3" readonly>${prevText}</textarea>
+    `;
+  }
+});
 
   wrap.innerHTML = `
     <p class="q">Q${idx + 1}. ${q}</p>
@@ -683,6 +715,7 @@ qs.forEach((q, idx) => {
     </script>
 </body>
 </html>
+
 
 
 
