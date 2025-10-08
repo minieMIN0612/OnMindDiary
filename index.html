@@ -1,106 +1,93 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>온마음 성장일기 · 학생용 MVP</title>
   <style>
+    :root {
+      --bg: #f7f8fa;
+      --card: #fff;
+      --line: #ddd;
+      --accent: #2563eb;
+      --muted: #777;
+      --ink: #111;
+    }
     body {
-      font-family: system-ui, "Noto Sans KR", sans-serif;
-      background:#fafafc;
-      margin:0;
-      color:#111;
-    }
-    header {
-      background: #fff;
-      padding: 16px;
-      text-align: center;
-      border-bottom: 1px solid #e5e7eb;
-      position: sticky;
-      top: 0;
-      z-index: 10;
-    }
-    h1 { margin: 0; font-size: 20px; }
-    .kicker { color: #6b7280; font-size: 12px; }
-    .container { max-width: 560px; margin: 0 auto; padding: 20px; }
-    .card {
-      background: #fff;
-      border: 1px solid #e5e7eb;
-      border-radius: 12px;
-      box-shadow: 0 2px 8px rgba(0,0,0,.05);
+      font-family: "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--ink);
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
       padding: 20px;
     }
-    label { font-size: 13px; color: #374151; }
-    input, textarea, button {
-      font: inherit;
+    .container {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border-radius: 14px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      padding: 24px;
+      margin-top: 40px;
+    }
+    h1 { font-size: 20px; margin: 0 0 4px; text-align: center; }
+    .kicker { font-size: 13px; color: var(--muted); text-align: center; margin-bottom: 16px; }
+    label { font-size: 14px; display: block; margin-top: 12px; }
+    input, select, textarea {
       width: 100%;
       padding: 10px;
-      margin-top: 4px;
-      border: 1px solid #d1d5db;
-      border-radius: 8px;
-      box-sizing: border-box;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      margin-top: 6px;
+      font-size: 14px;
     }
-    textarea { resize: vertical; }
     button {
-      cursor: pointer;
-      margin-top: 10px;
-    }
-    .btn {
-      background: #2563eb;
-      color: white;
+      width: 100%;
+      padding: 12px;
       border: none;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
     }
-    .btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .row { display: flex; gap: 8px; margin-top: 10px; }
-    .hint { font-size: 12px; color: #6b7280; margin-top: 6px; }
+    .btn-accent { background: var(--accent); color: #fff; }
+    .btn-gray { background: #eee; color: #333; }
+    .center { text-align: center; margin-top: 16px; }
+    .question { font-weight: 600; margin-bottom: 8px; }
   </style>
-</head>
 
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/11.0.2/firebase-database-compat.js"></script>
+</head>
 <body>
-  <header>
+  <div class="container" id="loginView">
     <h1>온마음 성장일기 · 학생용 MVP</h1>
     <div class="kicker">특별한 하루 × SEL 5-Years Diary</div>
-  </header>
+    <label>아이디</label>
+    <input type="text" id="userId" placeholder="예: s1234">
+    <label>비밀번호</label>
+    <input type="password" id="userPw" placeholder="비밀번호 입력">
+    <button class="btn-accent" id="loginBtn">로그인</button>
+    <button class="btn-gray" id="signupBtn">회원가입</button>
+  </div>
 
-  <!-- 로그인 화면 -->
-  <section id="authView" class="container">
-    <div class="card">
-      <h3>로그인</h3>
-      <label>아이디</label>
-      <input id="userid" placeholder="예: s1234" />
-      <label>비밀번호</label>
-      <input id="password" type="password" placeholder="비밀번호" />
-      <div class="row">
-        <button id="btnLogin" class="btn">로그인</button>
-        <button id="btnSignup">회원가입</button>
-      </div>
-      <p class="hint">GitHub Pages용 테스트 — Firebase Auth 연결</p>
-    </div>
-  </section>
-
-  <!-- 메인 화면 -->
-  <section id="mainView" class="container" style="display:none;">
-    <div class="card">
-      <h3>오늘의 마음 질문 💭</h3>
-      <p id="question" style="font-weight:600;">오늘 가장 기억에 남는 일은 무엇인가요?</p>
-      <textarea id="answer" rows="5" placeholder="오늘의 생각이나 감정을 적어보세요."></textarea>
-      <div class="row">
-        <button id="btnSave" class="btn">저장</button>
-        <button id="btnLogout">로그아웃</button>
-      </div>
-      <p id="statusMsg" class="hint">상태 메시지</p>
-    </div>
-  </section>
-
-  <!-- ✅ Firebase SDK (안정된 8.10.1 버전) -->
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+  <div class="container" id="mainView" style="display:none;">
+    <h1>오늘의 마음 질문 💭</h1>
+    <div class="kicker" id="nicknameArea"></div>
+    <div class="question" id="todayQ"></div>
+    <textarea id="answer" rows="5" placeholder="오늘의 생각이나 감정을 적어보세요."></textarea>
+    <button class="btn-accent" id="saveBtn">저장</button>
+    <button class="btn-gray" id="logoutBtn">로그아웃</button>
+    <div class="center" id="status"></div>
+  </div>
 
   <script>
-    // ===== Firebase 초기화 =====
+    // Firebase 설정 (✅ 너의 실제 config 그대로 써야 함)
     const firebaseConfig = {
-      apiKey: "AIzaSyCUVpiOAO0lc9t4Aamo6jCL5ZeKSppPmVM",
+      apiKey: "AIzaSyCUvpi0A00lc9t4Aamo6jCL5ZeK5ppPmVM",
       authDomain: "haru-dc490.firebaseapp.com",
       databaseURL: "https://haru-dc490-default-rtdb.asia-southeast1.firebasedatabase.app",
       projectId: "haru-dc490",
@@ -109,82 +96,107 @@
       appId: "1:1062975092523:web:3750d0e5722cae7767b76e",
       measurementId: "G-6VVS4MSJBT"
     };
+
     firebase.initializeApp(firebaseConfig);
-    console.log("✅ Firebase initialized:", firebase.apps.length);
-
     const auth = firebase.auth();
-    const db = firebase.firestore();
-    const $ = (id) => document.getElementById(id);
+    const db = firebase.database();
 
-    // ===== 화면 전환 함수 =====
-    function showMain() {
-      $("authView").style.display = "none";
-      $("mainView").style.display = "block";
-      $("statusMsg").textContent = "로그인 상태입니다.";
-    }
+    const loginView = document.getElementById("loginView");
+    const mainView = document.getElementById("mainView");
+    const loginBtn = document.getElementById("loginBtn");
+    const signupBtn = document.getElementById("signupBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
+    const saveBtn = document.getElementById("saveBtn");
 
-    function showAuth() {
-      $("authView").style.display = "block";
-      $("mainView").style.display = "none";
-      $("statusMsg").textContent = "로그인이 필요합니다.";
-    }
+    const todayQ = document.getElementById("todayQ");
+    const answer = document.getElementById("answer");
+    const status = document.getElementById("status");
+    const nicknameArea = document.getElementById("nicknameArea");
 
-    // ===== Firebase Auth 연동 =====
-    $("btnSignup").addEventListener("click", async () => {
-      const id = $("userid").value.trim();
-      const pw = $("password").value;
+    // 오늘의 질문 자동 생성
+    const questions = [
+      "오늘 가장 기억에 남는 일은 무엇인가요?",
+      "오늘 내가 웃게 된 순간은 언제였나요?",
+      "오늘의 나에게 해주고 싶은 말은?"
+    ];
+    const todayIndex = new Date().getDate() % questions.length;
+    todayQ.textContent = questions[todayIndex];
+
+    // 회원가입
+    signupBtn.onclick = async () => {
+      const id = userId.value.trim();
+      const pw = userPw.value.trim();
       if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
       try {
-        const email = `${id}@id.onmaum`;
+        const email = `${id}@onmaum.com`;
         await auth.createUserWithEmailAndPassword(email, pw);
-        alert("회원가입 성공!");
-      } catch (e) {
-        alert("회원가입 실패: " + e.message);
+        alert("회원가입 성공! 이제 로그인하세요.");
+      } catch (err) {
+        alert("회원가입 실패: " + err.message);
       }
-    });
+    };
 
-    $("btnLogin").addEventListener("click", async () => {
-      const id = $("userid").value.trim();
-      const pw = $("password").value;
+    // 로그인
+    loginBtn.onclick = async () => {
+      const id = userId.value.trim();
+      const pw = userPw.value.trim();
       if (!id || !pw) return alert("아이디와 비밀번호를 입력하세요.");
       try {
-        const email = `${id}@id.onmaum`;
+        const email = `${id}@onmaum.com`;
         await auth.signInWithEmailAndPassword(email, pw);
-        alert("로그인 성공!");
-      } catch (e) {
-        alert("로그인 실패: " + e.message);
+        loginView.style.display = "none";
+        mainView.style.display = "block";
+        nicknameArea.textContent = `${id} 학생의 오늘 기록`;
+        loadAnswer(id);
+      } catch (err) {
+        alert("로그인 실패: " + err.message);
       }
-    });
+    };
 
-    $("btnLogout").addEventListener("click", async () => {
+    // 로그아웃
+    logoutBtn.onclick = async () => {
       await auth.signOut();
-      alert("로그아웃 완료");
-      showAuth();
-    });
+      loginView.style.display = "block";
+      mainView.style.display = "none";
+    };
 
-    // ===== Firestore 저장 기능 =====
-    $("btnSave").addEventListener("click", async () => {
+    // 저장
+    saveBtn.onclick = async () => {
       const user = auth.currentUser;
-      if (!user) return alert("로그인이 필요합니다.");
-      const text = $("answer").value.trim();
+      if (!user) return;
+      const id = user.email.split("@")[0];
+      const text = answer.value.trim();
       if (!text) return alert("내용을 입력하세요.");
-      await db.collection("onmind_diary").doc(user.uid).set({
+      const today = new Date().toISOString().split("T")[0];
+      await db.ref(`onmaumDiary/${id}/${today}`).set({
+        question: todayQ.textContent,
         answer: text,
-        updated: new Date()
+        date: today
       });
-      $("statusMsg").textContent = "💾 저장 완료!";
-    });
+      status.textContent = "✅ 저장 완료!";
+      setTimeout(() => (status.textContent = ""), 2000);
+    };
 
-    // ===== 로그인 유지 =====
+    // 불러오기
+    async function loadAnswer(id) {
+      const today = new Date().toISOString().split("T")[0];
+      const snap = await db.ref(`onmaumDiary/${id}/${today}`).get();
+      if (snap.exists()) answer.value = snap.val().answer;
+    }
+
+    // 로그인 상태 유지
     auth.onAuthStateChanged((user) => {
       if (user) {
-        showMain();
-        $("statusMsg").textContent = "로그인 유지됨";
+        loginView.style.display = "none";
+        mainView.style.display = "block";
+        const id = user.email.split("@")[0];
+        nicknameArea.textContent = `${id} 학생의 오늘 기록`;
+        loadAnswer(id);
       } else {
-        showAuth();
+        loginView.style.display = "block";
+        mainView.style.display = "none";
       }
     });
   </script>
 </body>
 </html>
-
