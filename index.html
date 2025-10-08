@@ -182,19 +182,25 @@ function initDiaryOnce(){
   diaryInited = true;
 
   buildDiaryUI();
-  wireDiaryLogic();    
+  wireDiaryLogic();
 
-  // yearPicker 등 DOM이 완전히 붙을 때까지 안전 대기
-  const safeInit = () => {
-    if (document.getElementById("yearPicker")) {
+  // 💡 yearPicker가 완전히 DOM에 붙을 때까지 반복 확인
+  let checkCount = 0;
+  const waitForPicker = setInterval(() => {
+    const picker = document.getElementById("yearPicker");
+    if (picker) {
+      clearInterval(waitForPicker);
+      console.log("✅ yearPicker 준비 완료, 달력 렌더 시작");
       renderCalendar();
       autoSelectTodayIfSpecial();
     } else {
-      console.warn("⏳ yearPicker 아직 준비 안됨 — 100ms 후 재시도");
-      setTimeout(safeInit, 100);
+      checkCount++;
+      if (checkCount > 30) {
+        clearInterval(waitForPicker);
+        console.error("⚠️ yearPicker 찾기 실패 — buildDiaryUI 실행 확인 필요");
+      }
     }
-  };
-  safeInit();
+  }, 100);
 }
 
     /* ---------- (1) 메인화면에 UI 삽입 ---------- */
@@ -639,6 +645,7 @@ function initDiaryOnce(){
   <!-- 기존 성공버전의 “간단 저장” 로직은 상단 script에 그대로 있음 -->
 </body>
 </html>
+
 
 
 
