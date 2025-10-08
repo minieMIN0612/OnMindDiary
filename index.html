@@ -185,14 +185,6 @@ let diaryInited = false;
       }
     });
 
-const logoutBtn = document.getElementById("logoutBtn");
-if (logoutBtn) {
-  logoutBtn.addEventListener("click", async () => {
-    await signOut(auth);
-    mainView.style.display  = "none";
-    loginView.style.display = "block";
-  });
-}
 
     // (기존 성공버전 보조) 새로고침/복귀 시 상태 유지
    onAuthStateChanged(auth, (user) => {
@@ -301,7 +293,17 @@ function initDiaryOnce(){
       `;
       document.getElementById('mainView').appendChild(container);
     }
-
+// 🔹 로그아웃 버튼 기능 연결 (buildDiaryUI 실행 후)
+setTimeout(() => {
+  const logoutBtn = document.getElementById("logoutBtn");
+  if (logoutBtn) {
+    logoutBtn.addEventListener("click", async () => {
+      await signOut(auth);
+      mainView.style.display  = "none";
+      loginView.style.display = "block";
+    });
+  }
+}, 300);
     /* ---------- (2) 질문 데이터 (25일 × 3학년군 = 75문항) ---------- */
     const QUESTIONS={
       '03-02':{title:'3월 2일 · 개학',lunar:false,questions:{
@@ -614,13 +616,13 @@ function selectDate(solarKey, qKey, dateObj, cellEl){
 let allPrev = [];
 if (user) {
   // 🔹 현재 연도보다 과거의 모든 연도 문서 가져오기 (5년 전까지 예시)
-  for (let y = viewYear - 5; y < viewYear; y++) {
-    const prevId = `${user.uid}__${y}__${currentDayKey}`;
-    const prevDoc = await getDoc(doc(db, 'entries', prevId));
-    if (prevDoc.exists()) {
-      allPrev.push({ year: y, data: prevDoc.data() });
-    }
+ for (let y = viewYear - 5; y <= viewYear; y++) {
+  const prevId = `${user.uid}__${y}__${currentDayKey}`;
+  const prevDoc = await getDoc(doc(db, 'entries', prevId));
+  if (prevDoc.exists()) {
+    allPrev.push({ year: y, data: prevDoc.data() });
   }
+}
 }
 
 qs.forEach((q, idx) => {
@@ -681,6 +683,7 @@ qs.forEach((q, idx) => {
     </script>
 </body>
 </html>
+
 
 
 
